@@ -1,0 +1,220 @@
+--== Zahtjevi: ==--
+id klijenta ili grupe:
+ - 2 byte-a, unsigned integer, big endian (prvo najznacajniji byte)
+
+nadimak klijenta/grupe
+ - niz byteova, utf8 kodiranje
+ - duljina: 3-50 unicode znakova (ne byteova!) ~ max 200 byeova
+ - dopusteni znakovi: unicode kategorije slova (Lx), brojeva (Nx), space (U+0020) i underscore (U+005F)
+
+poruka
+ - niz byteova, utf8 kodiranje
+ - najveca duljina: kolko god stane u jedan VuzdarProtocol paket (2^16 byteova trenutno)
+ - dopusteni znakovi: sve unicode kategorije osim Other (Cx)
+
+
+--== Primjer paketa: ==--
+buduce vrste poruka (+ moramo, - ak moze):
+ + stvori grupu, posalji tekstualnu poruku grupi, izadi iz grupe (+ mozda dodaj osobu u grupu, grupa ima svog admina onda)
+ + admin: posalji zahtjev za autorizacijom, posalji zahtjev za statistikama, kick/ban/unban
+ - zajednicki grupni chat, poruke idu svima, mozda da tu i server moze pisat
+ - iniciraj sifriranje veze, razlicite poruke za razmjenu kljuceva (DH + AES sifriranje sve nakon)
+ - iniciraj slanje datoteke, prihvati slanje datoteke, salji datoteku
+
+random cinjenice:
+ - za svaku klijentovu poslanu poruku se mora dobit povratna informacija
+ - istim tipom poruke se uvijek odgovara na isti tip
+ - ista poruka moze znacit razlicite stvari ak se salje sa klijenta na server ili sa servera na klijent
+ - obicno ako se posalje tip poruke, i duljina 0, to znaci potvrda u nekom smislu (u kontekstu tipa poruke)
+ - a ako se salje potvrda kao control code, onda je obicno:
+  -> code 0x za potvrdu
+  -> code Fx za gresku
+  -> a ostalo ovisi
+
+1 byte - vrsta poruke:
+ - 0 - registracija (upit i odgovor uspjesno/neuspjesno)
+ - 1 - slanje informacija o klijentima (dosli/otisli klijenti, preko toga implementirano pocetno slanje popisa klijenata svakom klijentu koji dode)
+ - 2 - tekstualna privatna poruka Klijent --> Klijent
+ - 3 - tekstualna grupna poruka, ukljucujuci stvaranje grupe
+ - 4 - admin, (de)autorizacija, zahtjev za info, kick/ban/unban
+ - 5 - pinganje klijenta
+ - 6 - klijent se disconnecta/server se gasi
+ - 7 - greška na razini protokola - smislit ovo jos
+ - 255 - nije legitiman tip (koristi se u kodu kao gre¨ka)
+2 byte-a duzina, big endian - fiksni header, pa ond samo duzina cistih podataka?
+
+podatkovni dio dugacak kolko pise tu gore
+<prazno> znaci da je duzina postavljena na 0 i nis drugo se ne salje
+
+-= Izgled podatkovnog dijela: =-
+
+*** Tip 0 - registracija:
+
+Sluèaj 1, klijent salje serveru, ocekuje odgovor:
+<nadimak [niz byteova]>
+
+Sluèaj 2, server salje klijentu da je uspjesno/neuspjesno registriran:
+<1 byte, control code>
+
+Control code:
+00 - uspjesno registriran, slijedi lista aktivnih klijenata
+F0 - neuspjesno registriran - nije jedinstven nadimak
+F1 - neuspjesno registriran - predugacak nadimak
+F2 - neuspjesno registriran - nedopusteni znakovi u nadimku
+
+*** Tip 1 - info o aktivnosti klijenta, server salje, ne ocekuje odgovor:
+
+Slucaj 1, salje se popis zivih klijenata (to je u slucaju da se novi klijent spojio pa treba dobit popis ljudi koji su spojeni, ili ako je novi klijent doso pa svim drugim klijentima javljamo da je doso novi klijent, u oba slucaja je potreban i client id i nadimak):
+<1 byte postavljen na 01, oznacava da klijenti koje saljemo su zivi><client id1 [2 byte-a]><nadimak1 [niz byteova]>\0<client id2 [2 byte-a>...
+
+Sluèaj 2, saljemo ljude koji nisu aktivni (ili kada se neko disconnecta pa obavjestavamo ljude, ili kada napravi server ping svih korisnika i otkri da su npr 3 timeoutala onda to salje da obavijesti korisnike, u oba slucaja su to prije bili aktivni korisnici pa treba slat samo client id):
+<1 byte postavljen na 00, oznacava da saljemo neaktivne klijente><client id1 [2 byte-a]><client id2 [2 byte-a]>...
+
+
+*** Tip 2 - direktna tekstualna poruka:
+
+Slucaj 1, poruka/potvrda, klijent1 --> server, promijeni id iz primatelja (2) u posilajtelja (1) --> klijent2:
+<1 byte, control code><client id primatelja (kada klijent salje serveru) odnosno pošiljatelja (kada server salje klijentu) [2 byte-a]><poruka [niz byteova]>
+
+kada je poruka (niz byteova) prazna, odnosno duljina poruke je 3 byte-a, to znaci da je to potvrda, tj kontrolna poruka. klijent moze sam sebi slat poruku.
+<1 byte, control code><client id primatelja>
+
+Control code (server --> klijent):
+00 - uvijek kad je klijent --> server, inace poruka uspjesno poslana
+F0 - nemogu poslat poruku, klijent nije aktivan/ne postoji
+F1 - necu poslat poruku, nedopusteni znakovi
+
+
+*** Tip 3 - grupna tekstualna poruka:
+
+Control code koristi za stvaranje grupe, dodavanje ljudi u grupu, izlazak iz grupe i naravno slanje poruka (00). Nema individualnih potvrda jer broj poslanih paketa poraste onda s n na n^2. Jedina potvrda je serverova da je poruka ok i da ce ju ic slat okolo. Kad se neko disconecta izade iz grupe automatski.
+
+- Situacija 1
+1.1 stvaranje grupe, klijent --> server:
+<1 byte, control code 10><buduci group id, ovdje 0x00 0x00><naziv, niz byteova>\0<svoj client id><client id1><client id2>...
+
+Server stvori grupu __tog klijenta__ + client id1, id2... s nazivom <naziv>
+
+1.2 Odgovor na to od servera:
+<1 byte, control code>[<group id ako je uspjesno stvorena grupa>]
+
+Control code:
+01 - grupa uspjesno stvorena
+F0 - grupa nije stvorena, predugacak naziv
+F1 - grupa nije stvorena, nedopusteni znakovi u imenu
+F2 - grupa nije stvorena, jedan ili vise klijenta nisu aktivni/ne postoje
+
+1.3 Ako je grupa uspjesno stvorena server svim clanovima (osim onog ko je stvorio) salje:
+<1 byte control code 10><group id 2 bytea><naziv, niz byteova>\0<client id klijenta koji je stvorio grupu><client id1><client id2>...
+
+Prvi poslani clientId je onaj ko je stvorio grupu.
+
+- Situacijaj 2, poruka, klijent --> server --> cijela grupa:
+2.1 klijent --> server:
+<1 byte, control code 00><group id><client id posiljatelja (svoj id)><poruka, niz byteova>
+
+Ovdje postoji visak byteova koji se salje (taj clientid), al to je da server lakse procesira.
+
+2.2 server --> klijent (odgovara jel dobra poruka):
+<1 byte, control code><group id>
+
+Control code:
+02 - poruka dobra, saljem dalje
+F3 - grupa nije aktivna/ne postoji
+F4 - necu poslat poruku, nedopusteni znakovi
+
+2.3 ako je dobra poruka, server --> svi ostali (osim posilatelja), samo prosljeduje onu poruku:
+<1 byte, control code 00><group id><client id posiljatelja (svoj id)><poruka, niz byteova>
+
+Situacija 3
+3.1 klijent izlazi iz grupe, klijent --> server:
+<1B control code 11><group id>
+
+3.2 Server odgovara:
+<1B control code><group id>
+
+Control code:
+03 - uspjesno izbacen iz grupe
+F3 - grupa nije aktivna/ne postoji (opet, ko da je izbacen, samo ono informativno)
+
+3.3 Notifikacija clanovima grupe da je clan otiso:
+<1B control code 11><group id><client id>
+
+Situacija 4, klijent 1 dodaje klijenta 2 u grupu:
+<1B control code 12><group id><client id onog kojeg se dodaje>
+
+4.1 server odgovara:
+<1B control code><group id>
+
+Control code:
+04 - uspjesno dodan
+F3 - grupa nije aktivna/ne postoji
+F5 - klijent nije aktivan/ne postoji
+
+4.2 ako je uspjesno dodan salje ostalima:
+<1B control code 12><group id><client id>
+
+4.3 i ako je uspjesno dodan salje tom klijentu onu poruku od gore pod 1.3
+
+*** Tip 4 - admin
+
+
+
+*** Tip 5 - ping
+
+Server pinga klijenta:
+<1B control code 0x00>
+
+Klijent odgovara:
+<1B control code 0x00>
+
+*** Tip 6 - klijent se disconnecta/server se gasi, ovisno ko kome salje:
+
+<1 byte, control code>
+
+Control code:
+00 - nema dodatne informacije, rip in pepperoni, ostalo rezervirano za buducnost
+
+Bilo bi pristojno da onaj koji salje ceka da se ova poruka primi prije nego sto prekine TCP vezu, al nije tragedija ako ne.
+
+
+*** Tip 7 - greška na razini protokola, samo server moze poslat klijentu, u stilu "ne razumijem poruku, nepravilan/neocekivan paket", standardno ponasanje servera je ili ignorirati nepravilan/neocekivan paket jer sve drugo u principu ima potvrde ako potvrda ima smisla, ili disconnectati klijenta al to je malo cudno:
+
+<1 byte, control code>
+
+Control code:
+00 - Nepravilan/neocekivan paket
+
+To klijentu tipa javi u posebnom dijelu za serverinfo ili kao dialog box, greska u slanju paketa, pozeljno bi bilo restartat vezu
+
+
+--== Materijali: ==--
+ - https://www.ietf.org/rfc/rfc3117.txt
+
+
+--== Sta mora bit podrzano: ==--
+
+Za pocetak samo slanje direktnih poruka Klijent --> Klijent:
+
+ - klijent se "registrira" na server
+  -> *** Poruka registriranja, Klijent --> Server ***
+   -> pita za nadimak
+  -> prva stvar sta mora napravit nakon spajanja tcp veze
+  -> mora pitat jel moze koristit odredeni nadimak
+   -> ako nije jedinstven nemoze
+   -> ako ne zadovoljava ostale zahtjeve koje server odreduje (alfanumericki? manji od 20 znakova?) nemoze
+   -> inace moze
+  -> ako ne zeli birat nadimak (posalje null byte?) server ga automatski odabere (user<id> u nasem slucaju)
+  -> *** Poruka odgovora na registraciju, uspjeh/neuspjeh, zasto? (error code) ***
+   -> ako nemoze, error code i mozda text objasnjenje zasto
+   -> ako moze sve super, sljedeci korak: poslat serverove konfiguracijske varijable ako to postoji i listu spojenih klijenata (parovi id-nickname)?
+ 
+ - slanje info poruke koji su svi klijenti spojeni
+  -> sta ako je jako puno klijenta i to ne stane u jedan VuzdarProtocol paket?
+  -> salje se (osim headera) niz od:
+   -> 1 byte jel korisnik ziv (1) ili ne (0)
+   -> 2 bytea za id
+   -> 
+
+ - sta kad server ili klijent prime neko random sranje?
+  -> ignorirat ili poslat wtf poruku?
