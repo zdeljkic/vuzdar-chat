@@ -157,6 +157,27 @@ quint16 VuzdarPacket::getChangedClientId()
     return getSecondId();
 }
 
+QList<QString> VuzdarPacket::getBannedNicknameList()
+{
+    QList<QString> list;
+    int end;
+
+    for (int i = 4; i < data.size() - 1; i = end + 1) {
+        end = data.indexOf('\0', i);
+        if (end == -1)
+            return list;
+
+        list.append(QString(data.mid(i, end - i)));
+    }
+
+    return list;
+}
+
+QString VuzdarPacket::getAdminString()
+{
+    return QString(data.mid(4, length - 1));
+}
+
 QByteArray VuzdarPacket::generateControlCodePacket(VuzdarPacket::PacketType type, quint8 controlCode)
 {
     QByteArray newData = generateEmptyPacket(type, 1);
@@ -181,7 +202,7 @@ QByteArray VuzdarPacket::generateAliveClientPacket(QList<QPair<quint16, QString>
     quint16 length = 1;
 
     for (int i = 0; i < list.size(); ++i) {
-        length += 2 + list[i].second.length() + 1;
+        length += 2 + list[i].second.toUtf8().length() + 1;
     }
 
     QByteArray newData = generateEmptyPacket(CLIENT_ACTIVITY, length);
@@ -283,6 +304,47 @@ QByteArray VuzdarPacket::generateGroupMemberChangePacket(quint8 controlCode, qui
     pair = convert(clientId);
     newData[6] = pair.first;
     newData[7] = pair.second;
+
+    return newData;
+}
+
+QByteArray VuzdarPacket::generateBannedListPacket(QList<QString> list)
+{
+    int length = 1;
+
+    for (int i = 0; i < list.size(); ++i) {
+        length += list[i].toUtf8().length() + 1;
+    }
+
+    QByteArray newData = generateEmptyPacket(ADMIN, length);
+
+    newData[3] = 0x20;
+
+    QByteArray rawNickname;
+
+    int end;
+    int pos = 4;
+
+    for (int i = 0; i < list.size(); ++i) {
+        rawNickname = list[i].toUtf8();
+        newData.replace(pos, rawNickname.length(), rawNickname);
+        pos += rawNickname.length();
+
+        newData[pos] = '\0';
+        ++pos;
+    }
+
+    return newData;
+}
+
+QByteArray VuzdarPacket::generateAdminPacket(quint8 controlCode, QString string)
+{
+    QByteArray rawString = string.toUtf8();
+    QByteArray newData = generateEmptyPacket(ADMIN, 1 + rawString.length());
+
+    newData[3] = controlCode;
+
+    newData.replace(4, rawString.length(), rawString);
 
     return newData;
 }

@@ -30,6 +30,8 @@ public:
     quint16 getSecondId();
     QString getMessage();
     quint16 getChangedClientId();
+    QList<QString> getBannedNicknameList();
+    QString getAdminString();
 
     static QByteArray generateControlCodePacket(PacketType type, quint8 controlCode);
     static QByteArray generateRegistrationPacket(QString nickname);
@@ -40,6 +42,9 @@ public:
     static QByteArray generateCreateGroupReplyPacket(quint8 controlCode, quint16 id);
     static QByteArray generateTextGroupMessagePacket(quint8 controlCode, quint16 groupId, quint16 clientId, QString message);
     static QByteArray generateGroupMemberChangePacket(quint8 controlCode, quint16 groupId, quint16 clientId);
+    static QByteArray generateAuthorizationPacket(QString password);
+    static QByteArray generateBannedListPacket(QList<QString> list);
+    static QByteArray generateAdminPacket(quint8 controlCode, QString string);
 
 private:
     QByteArray data;
