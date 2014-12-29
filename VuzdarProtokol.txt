@@ -7,6 +7,9 @@ nadimak klijenta/grupe
  - duljina: 3-50 unicode znakova (ne byteova!) ~ max 200 byeova
  - dopusteni znakovi: unicode kategorije slova (Lx), brojeva (Nx), space (U+0020) i underscore (U+005F)
 
+password - bilokakav utf8 string
+hash - za sad, sha256(password.toUtf8)
+
 poruka
  - niz byteova, utf8 kodiranje
  - najveca duljina: kolko god stane u jedan VuzdarProtocol paket (2^16 byteova trenutno)
@@ -157,8 +160,55 @@ F5 - klijent nije aktivan/ne postoji
 4.3 i ako je uspjesno dodan salje tom klijentu onu poruku od gore pod 1.3
 
 *** Tip 4 - admin
+Autorizacija, deautorizacija, kick/ban/unban po nadimku, trazi listu bannanih nadimaka, trazi statistiku
 
+1.1 Autorizacija, klijent ¨alje serveru:
+<1B control code 0x00><hash u hex obliku (gore definirano, trenutno veliko 64 znaka = bytea)>
 
+Server odgovara:
+<1B control code>
+
+Control code:
+00 - ispravan password
+F0 - neispravan password
+
+1.2 Deautorizacija, klijent ¨alje:
+<1B control code 0x01>
+
+Server odgovara:
+<1B control code 0x01> (uspjesno deautroziiran)>
+
+2.1 Kick/ban/unban, klijent ¨alje:
+<1B control code><nadimak>
+
+Control code:
+10 - kick
+11 - ban
+12 - unban
+
+Server odg:
+<1B control code>
+
+Control code:
+10 - uspjesan kick
+11 - uspjesan ban
+12 - uspjesan unban
+F0 - nisi admin nemoze
+F1 - neuspjesno, ne postoji nadimak
+
+3.1 Trazi listu bannanih nadimaka, klijent salje:
+<1B control code 0x20>
+
+Server odgovara:
+<1B control code 0xF0> ako nije admin, inace:
+<1B control code 0x20><nadimak1>\0<nadimak2>\0...
+
+4.1 Trazi statistiku, klijent salje:
+<1B control code 0x21>
+
+Server odgovara:
+<1B control code 0xF0> ako nije admin, inace:
+<1B control code 0x21><utf8 string statistike>
 
 *** Tip 5 - ping
 
@@ -174,6 +224,8 @@ Klijent odgovara:
 
 Control code:
 00 - nema dodatne informacije, rip in pepperoni, ostalo rezervirano za buducnost
+10 - kickan si (kad server salje)
+11 - bannan si (kad server salje)
 
 Bilo bi pristojno da onaj koji salje ceka da se ova poruka primi prije nego sto prekine TCP vezu, al nije tragedija ako ne.
 
