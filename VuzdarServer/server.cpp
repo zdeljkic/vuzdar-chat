@@ -264,6 +264,8 @@ void Server::processPacket(quint16 id, VuzdarPacket packet)
             clients[id]->sendPacket(VuzdarPacket::generateControlCodePacket(
                                         VuzdarPacket::ERROR, 0x01));
         }
+    } else if (type == VuzdarPacket::DISCONNECT) {
+
     }
 
 }
@@ -309,6 +311,7 @@ void Server::createClient()
     quint16 nextClientId = getNextClientId();
 
     Client *newClient = new Client(nextClientId, server.nextPendingConnection(), this);
+    connect(newClient, SIGNAL(signalRemoval(quint16)), this, SLOT(removeClient(quint16)));
 
     clients[nextClientId] = newClient;
 
@@ -320,6 +323,25 @@ void Server::createClient()
     infoText += ", client id = ";
     infoText += QString::number(newClient->getId());
     infoText += " =-";
+
+    emit newInfoText(infoText);
+}
+
+void Server::removeClient(quint16 id)
+{
+    groups[0]->removeMember(clients[id]);
+    delete clients[id];
+    clients.remove(id);
+
+    QList<quint16> list;
+    list.append(id);
+
+    groups[0]->sendPacket(VuzdarPacket::generateDeadClientPacket(list));
+
+    QString infoText;
+    infoText = "-= Client ";
+    infoText += QString::number(id);
+    infoText += " disconnected =-";
 
     emit newInfoText(infoText);
 }

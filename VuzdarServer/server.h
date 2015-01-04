@@ -40,6 +40,7 @@ private:
 
 private slots:
     void createClient();
+    void removeClient(quint16 id);
 
 signals:
     void newInfoText(QString text);

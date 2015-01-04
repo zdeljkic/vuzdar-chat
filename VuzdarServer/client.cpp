@@ -8,11 +8,15 @@ Client::Client(quint16 id, QTcpSocket *socket, Server *server)
     this->server = server;
 
     connect(this->socket, SIGNAL(readyRead()), this, SLOT(receiveData()));
+    connect(this->socket, SIGNAL(disconnected()), this, SLOT(disconnecting()));
 }
 
 Client::~Client()
 {
-    delete socket;
+    socket->disconnectFromHost();
+
+    if (socket->state() == QTcpSocket::UnconnectedState || socket->waitForDisconnected(1000))
+        delete socket;
 }
 
 void Client::setNickname(QString nickname)
@@ -70,4 +74,9 @@ void Client::receiveData()
     qDebug() << "-----";
 
     server->processPacket(id, VuzdarPacket(data));
+}
+
+void Client::disconnecting()
+{
+    emit signalRemoval(id);
 }

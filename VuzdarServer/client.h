@@ -33,9 +33,10 @@ private:
 
 private slots:
     void receiveData();
+    void disconnecting();
 
 signals:
-
+    void signalRemoval(quint16 id);
 };
 
 #endif // CLIENT_H
