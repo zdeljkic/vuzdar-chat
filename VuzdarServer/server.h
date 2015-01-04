@@ -3,7 +3,11 @@
 
 #include <QObject>
 #include <QMap>
+#include <QList>
+#include <QPair>
 #include <QTcpServer>
+#include "../VuzdarCommon/vuzdarpacket.h"
+#include "group.h"
 
 class Client;
 
@@ -17,15 +21,22 @@ public:
 
     bool startServer(QString password, quint16 port);
     void stopServer();
-    void processData(quint16 clientId, QByteArray data);
+    void processPacket(quint16 id, VuzdarPacket packet);
+    bool isNicknameUnique(QString nickname);
+    QList<QPair<quint16, QString> > generateAliveClientList();
 
 public slots:
 
 private:
     QTcpServer server;
-    QMap <quint16, Client*> clients;
+    QMap<quint16, Client*> clients;
+    QMap<quint16, Group*> groups;
     quint16 nextClientId;
+    quint16 nextGroupId;
     QString password;
+
+    quint16 getNextClientId();
+    quint16 getNextGroupId();
 
 private slots:
     void createClient();

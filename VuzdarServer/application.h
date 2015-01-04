@@ -2,7 +2,7 @@
 #define APPLICATION_H
 
 #include <QWidget>
-#include <server.h>
+#include "server.h"
 
 namespace Ui {
 class Application;

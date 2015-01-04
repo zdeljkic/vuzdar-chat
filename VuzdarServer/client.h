@@ -3,6 +3,7 @@
 
 #include <QObject>
 #include <QTcpSocket>
+#include "../VuzdarCommon/vuzdarpacket.h"
 
 class Server;
 
@@ -20,7 +21,7 @@ public:
     void setNickname(QString nickname);
     QString getNickname();
 
-    void sendData(QByteArray data);
+    void sendPacket(VuzdarPacket packet);
 
 public slots:
 

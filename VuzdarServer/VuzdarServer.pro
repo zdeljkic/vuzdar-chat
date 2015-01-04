@@ -16,11 +16,13 @@ SOURCES += main.cpp\
         application.cpp \
     server.cpp \
     client.cpp \
-    vuzdarpacket.cpp
+    ../VuzdarCommon/vuzdarpacket.cpp \
+    group.cpp
 
 HEADERS  += application.h \
     server.h \
     client.h \
-    vuzdarpacket.h
+    ../VuzdarCommon/vuzdarpacket.h \
+    group.h
 
 FORMS    += application.ui

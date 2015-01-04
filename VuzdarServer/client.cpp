@@ -30,9 +30,15 @@ QString Client::getNickname()
     return nickname;
 }
 
-void Client::sendData(QByteArray data)
+void Client::sendPacket(VuzdarPacket packet)
 {
-    socket->write(data);
+    socket->write(packet.getRawData());
+
+    // !!DEBUG!!
+    qDebug() << "Sent packet";
+    qDebug() << "To:" << id;
+    qDebug() << "Data:" << packet.getRawData().toHex();
+    qDebug() << "-----";
 }
 
 QHostAddress Client::getAddress()
@@ -47,5 +53,21 @@ quint16 Client::getPort()
 
 void Client::receiveData()
 {
-    server->processData(id, socket->readAll());
+    QByteArray data = socket->readAll();
+
+    /*
+     * !!VAZNO!!
+     * Ovdje bi bilo dobro napraviti da "sjecka" podakte koje prima u pakete
+     * i salje ih tako serveru (pomocu nekog buffera), za slucaj da 1 VuzdarPacket
+     * nije strpan tocno u 1 TCP paket. Trenutno to nije potrebno ako je klijent
+     * bas nas VuzdarChat, al ono bilo bi ok to ubuduce napravit.
+     */
+
+    // !!DEBUG!!
+    qDebug() << "Recieved packet";
+    qDebug() << "From:" << id;
+    qDebug() << "Data:" << data.toHex();
+    qDebug() << "-----";
+
+    server->processPacket(id, VuzdarPacket(data));
 }
