@@ -33,8 +33,6 @@ quint16 VuzdarPacket::getLength()
 
 QString VuzdarPacket::getNickname()
 {
-    // relevantno za registraciju
-
     QString nickname(data.mid(3, length));
 
     if (checkName(nickname) == true)
@@ -136,8 +134,9 @@ QString VuzdarPacket::getMessage()
 {
     // relevantno za direktnu i grupno tekstualnu poruku
     // vraca poruku ako je dobra inace null qstring
+    // !!VAZNO!! pogledat kak se ovo ponasa sa slanjem praznih poruka i olducit jel to dobro
 
-    QString message;
+    QString message("");
 
     if (type == TEXT_PRIVATE_MESSAGE)
         message = QString(data.mid(6, length - 3));
@@ -178,26 +177,31 @@ QString VuzdarPacket::getAdminString()
     return QString(data.mid(4, length - 1));
 }
 
-QByteArray VuzdarPacket::generateControlCodePacket(VuzdarPacket::PacketType type, quint8 controlCode)
+quint16 VuzdarPacket::getExpectedLength(QByteArray data)
 {
-    QByteArray newData = generateEmptyPacket(type, 1);
+    return convert(data[1], data[2]);
+}
+
+VuzdarPacket VuzdarPacket::generateControlCodePacket(VuzdarPacket::PacketType type, quint8 controlCode)
+{
+    QByteArray newData = generateEmptyPacketData(type, 1);
 
     newData[3] = controlCode;
 
-    return newData;
+    return VuzdarPacket(newData);
 }
 
-QByteArray VuzdarPacket::generateRegistrationPacket(QString nickname)
+VuzdarPacket VuzdarPacket::generateRegistrationPacket(QString nickname)
 {
     QByteArray rawNickname = nickname.toUtf8();
-    QByteArray newData = generateEmptyPacket(REGISTRATION, rawNickname.length());
+    QByteArray newData = generateEmptyPacketData(REGISTRATION, rawNickname.length());
 
     newData.replace(3, rawNickname.length(), rawNickname);
 
-    return newData;
+    return VuzdarPacket(newData);
 }
 
-QByteArray VuzdarPacket::generateAliveClientPacket(QList<QPair<quint16, QString> > list)
+VuzdarPacket VuzdarPacket::generateAliveClientPacket(QList<QPair<quint16, QString> > list)
 {
     quint16 length = 1;
 
@@ -205,7 +209,7 @@ QByteArray VuzdarPacket::generateAliveClientPacket(QList<QPair<quint16, QString>
         length += 2 + list[i].second.toUtf8().length() + 1;
     }
 
-    QByteArray newData = generateEmptyPacket(CLIENT_ACTIVITY, length);
+    QByteArray newData = generateEmptyPacketData(CLIENT_ACTIVITY, length);
 
     newData[3] = 0x01;
 
@@ -228,14 +232,14 @@ QByteArray VuzdarPacket::generateAliveClientPacket(QList<QPair<quint16, QString>
         ++pos;
     }
 
-    return newData;
+    return VuzdarPacket(newData);
 }
 
-QByteArray VuzdarPacket::generateDeadClientPacket(QList<quint16> list)
+VuzdarPacket VuzdarPacket::generateDeadClientPacket(QList<quint16> list)
 {
     quint16 length = 1 + list.size() * 2;
 
-    QByteArray newData = generateEmptyPacket(CLIENT_ACTIVITY, length);
+    QByteArray newData = generateEmptyPacketData(CLIENT_ACTIVITY, length);
 
     newData[3] = 0x00;
 
@@ -250,14 +254,14 @@ QByteArray VuzdarPacket::generateDeadClientPacket(QList<quint16> list)
         pos += 2;
     }
 
-    return newData;
+    return VuzdarPacket(newData);
 }
 
-QByteArray VuzdarPacket::generateTextPrivateMessagePacket(quint8 controlCode, quint16 id, QString message)
+VuzdarPacket VuzdarPacket::generateTextPrivateMessagePacket(quint8 controlCode, quint16 id, QString message)
 {
     QByteArray rawMessage = message.toUtf8();
 
-    QByteArray newData = generateEmptyPacket(TEXT_PRIVATE_MESSAGE, 1 + 2 + rawMessage.length());
+    QByteArray newData = generateEmptyPacketData(TEXT_PRIVATE_MESSAGE, 1 + 2 + rawMessage.length());
 
     newData[3] = controlCode;
 
@@ -267,14 +271,14 @@ QByteArray VuzdarPacket::generateTextPrivateMessagePacket(quint8 controlCode, qu
 
     newData.replace(6, rawMessage.length(), rawMessage);
 
-    return newData;
+    return VuzdarPacket(newData);
 }
 
-QByteArray VuzdarPacket::generateTextGroupMessagePacket(quint8 controlCode, quint16 groupId, quint16 clientId, QString message)
+VuzdarPacket VuzdarPacket::generateTextGroupMessagePacket(quint8 controlCode, quint16 groupId, quint16 clientId, QString message)
 {
     QByteArray rawMessage = message.toUtf8();
 
-    QByteArray newData = generateEmptyPacket(TEXT_GROUP_MESSAGE, 1 + 2 + 2 + rawMessage.length());
+    QByteArray newData = generateEmptyPacketData(TEXT_GROUP_MESSAGE, 1 + 2 + 2 + rawMessage.length());
 
     newData[3] = controlCode;
 
@@ -288,12 +292,12 @@ QByteArray VuzdarPacket::generateTextGroupMessagePacket(quint8 controlCode, quin
 
     newData.replace(8, rawMessage.length(), rawMessage);
 
-    return newData;
+    return VuzdarPacket(newData);
 }
 
-QByteArray VuzdarPacket::generateGroupMemberChangePacket(quint8 controlCode, quint16 groupId, quint16 clientId)
+VuzdarPacket VuzdarPacket::generateGroupMemberChangePacket(quint8 controlCode, quint16 groupId, quint16 clientId)
 {
-    QByteArray newData = generateEmptyPacket(TEXT_GROUP_MESSAGE, 5);
+    QByteArray newData = generateEmptyPacketData(TEXT_GROUP_MESSAGE, 5);
 
     newData[3] = controlCode;
 
@@ -305,10 +309,10 @@ QByteArray VuzdarPacket::generateGroupMemberChangePacket(quint8 controlCode, qui
     newData[6] = pair.first;
     newData[7] = pair.second;
 
-    return newData;
+    return VuzdarPacket(newData);
 }
 
-QByteArray VuzdarPacket::generateBannedListPacket(QList<QString> list)
+VuzdarPacket VuzdarPacket::generateBannedListPacket(QList<QString> list)
 {
     int length = 1;
 
@@ -316,13 +320,12 @@ QByteArray VuzdarPacket::generateBannedListPacket(QList<QString> list)
         length += list[i].toUtf8().length() + 1;
     }
 
-    QByteArray newData = generateEmptyPacket(ADMIN, length);
+    QByteArray newData = generateEmptyPacketData(ADMIN, length);
 
     newData[3] = 0x20;
 
     QByteArray rawNickname;
 
-    int end;
     int pos = 4;
 
     for (int i = 0; i < list.size(); ++i) {
@@ -334,24 +337,24 @@ QByteArray VuzdarPacket::generateBannedListPacket(QList<QString> list)
         ++pos;
     }
 
-    return newData;
+    return VuzdarPacket(newData);
 }
 
-QByteArray VuzdarPacket::generateAdminPacket(quint8 controlCode, QString string)
+VuzdarPacket VuzdarPacket::generateAdminPacket(quint8 controlCode, QString string)
 {
     QByteArray rawString = string.toUtf8();
-    QByteArray newData = generateEmptyPacket(ADMIN, 1 + rawString.length());
+    QByteArray newData = generateEmptyPacketData(ADMIN, 1 + rawString.length());
 
     newData[3] = controlCode;
 
     newData.replace(4, rawString.length(), rawString);
 
-    return newData;
+    return VuzdarPacket(newData);
 }
 
-QByteArray VuzdarPacket::generateCreateGroupReplyPacket(quint8 controlCode, quint16 id)
+VuzdarPacket VuzdarPacket::generateControlCodeIdPacket(PacketType type, quint8 controlCode, quint16 id)
 {
-    QByteArray newData = generateEmptyPacket(TEXT_GROUP_MESSAGE, 3);
+    QByteArray newData = generateEmptyPacketData(type, 3);
 
     newData[3] = controlCode;
 
@@ -359,16 +362,16 @@ QByteArray VuzdarPacket::generateCreateGroupReplyPacket(quint8 controlCode, quin
     newData[4] = pair.first;
     newData[5] = pair.second;
 
-    return newData;
+    return VuzdarPacket(newData);
 }
 
-QByteArray VuzdarPacket::generateNewGroupPacket(quint16 id, QString name, QList<quint16> list)
+VuzdarPacket VuzdarPacket::generateNewGroupPacket(quint16 id, QString name, QList<quint16> list)
 {
     QByteArray rawName = name.toUtf8();
 
     int length = 1 + 2 + rawName.length() + 1 + list.size() * 2;
 
-    QByteArray newData = generateEmptyPacket(TEXT_GROUP_MESSAGE, length);
+    QByteArray newData = generateEmptyPacketData(TEXT_GROUP_MESSAGE, length);
 
     newData[3] = 0x10;
 
@@ -392,7 +395,7 @@ QByteArray VuzdarPacket::generateNewGroupPacket(quint16 id, QString name, QList<
         pos += 2;
     }
 
-    return newData;
+    return VuzdarPacket(newData);
 }
 
 quint16 VuzdarPacket::convert(char first, char second)
@@ -434,7 +437,7 @@ bool VuzdarPacket::checkMessage(QString message)
     return true;
 }
 
-QByteArray VuzdarPacket::generateEmptyPacket(VuzdarPacket::PacketType type, quint16 length)
+QByteArray VuzdarPacket::generateEmptyPacketData(VuzdarPacket::PacketType type, quint16 length)
 {
     QByteArray newData(length + 3, '\0');
 

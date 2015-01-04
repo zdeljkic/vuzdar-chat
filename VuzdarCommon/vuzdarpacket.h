@@ -33,18 +33,19 @@ public:
     QList<QString> getBannedNicknameList();
     QString getAdminString();
 
-    static QByteArray generateControlCodePacket(PacketType type, quint8 controlCode);
-    static QByteArray generateRegistrationPacket(QString nickname);
-    static QByteArray generateAliveClientPacket(QList<QPair<quint16,QString> > list);
-    static QByteArray generateDeadClientPacket(QList<quint16> list);
-    static QByteArray generateTextPrivateMessagePacket(quint8 controlCode, quint16 id, QString message);
-    static QByteArray generateNewGroupPacket(quint16 id, QString name, QList<quint16> list);
-    static QByteArray generateCreateGroupReplyPacket(quint8 controlCode, quint16 id);
-    static QByteArray generateTextGroupMessagePacket(quint8 controlCode, quint16 groupId, quint16 clientId, QString message);
-    static QByteArray generateGroupMemberChangePacket(quint8 controlCode, quint16 groupId, quint16 clientId);
-    static QByteArray generateAuthorizationPacket(QString password);
-    static QByteArray generateBannedListPacket(QList<QString> list);
-    static QByteArray generateAdminPacket(quint8 controlCode, QString string);
+    static quint16 getExpectedLength(QByteArray data);
+    static VuzdarPacket generateControlCodePacket(PacketType type, quint8 controlCode);
+    static VuzdarPacket generateControlCodeIdPacket(PacketType type, quint8 controlCode, quint16 id);
+    static VuzdarPacket generateRegistrationPacket(QString nickname);
+    static VuzdarPacket generateAliveClientPacket(QList<QPair<quint16,QString> > list);
+    static VuzdarPacket generateDeadClientPacket(QList<quint16> list);
+    static VuzdarPacket generateTextPrivateMessagePacket(quint8 controlCode, quint16 id, QString message);
+    static VuzdarPacket generateNewGroupPacket(quint16 id, QString name, QList<quint16> list);
+    static VuzdarPacket generateTextGroupMessagePacket(quint8 controlCode, quint16 groupId, quint16 clientId, QString message);
+    static VuzdarPacket generateGroupMemberChangePacket(quint8 controlCode, quint16 groupId, quint16 clientId);
+    static VuzdarPacket generateAuthorizationPacket(QString password);
+    static VuzdarPacket generateBannedListPacket(QList<QString> list);
+    static VuzdarPacket generateAdminPacket(quint8 controlCode, QString string);
 
 private:
     QByteArray data;
@@ -55,7 +56,7 @@ private:
     static QPair<quint8, quint8> convert(quint16 x);
     static bool checkName(QString name);
     static bool checkMessage(QString message);
-    static QByteArray generateEmptyPacket(PacketType type, quint16 length);
+    static QByteArray generateEmptyPacketData(PacketType type, quint16 length);
 };
 
 #endif // VUZDARPACKET_H

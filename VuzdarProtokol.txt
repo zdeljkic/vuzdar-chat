@@ -92,11 +92,14 @@ F1 - necu poslat poruku, nedopusteni znakovi
 
 Control code koristi za stvaranje grupe, dodavanje ljudi u grupu, izlazak iz grupe i naravno slanje poruka (00). Nema individualnih potvrda jer broj poslanih paketa poraste onda s n na n^2. Jedina potvrda je serverova da je poruka ok i da ce ju ic slat okolo. Kad se neko disconecta izade iz grupe automatski.
 
+Server implicitno zatvara grupe kad izadu svi clanovi.
+
 - Situacija 1
 1.1 stvaranje grupe, klijent --> server:
 <1 byte, control code 10><buduci group id, ovdje 0x00 0x00><naziv, niz byteova>\0<svoj client id><client id1><client id2>...
 
-Server stvori grupu __tog klijenta__ + client id1, id2... s nazivom <naziv>
+Server stvori grupu tog klijenta + client id1, id2... s nazivom <naziv>. Obavezno provjerit da je prvi client id
+bas client id onog ko salje! inace bi se moglo lazirati stvaratelja grupe!
 
 1.2 Odgovor na to od servera:
 <1 byte, control code>[<group id ako je uspjesno stvorena grupa>]
@@ -107,7 +110,7 @@ F0 - grupa nije stvorena, predugacak naziv
 F1 - grupa nije stvorena, nedopusteni znakovi u imenu
 F2 - grupa nije stvorena, jedan ili vise klijenta nisu aktivni/ne postoje
 
-1.3 Ako je grupa uspjesno stvorena server svim clanovima (osim onog ko je stvorio) salje:
+1.3 Ako je grupa uspjesno stvorena server svim clanovima (ukljucujuci onog ko je stvorio) salje:
 <1 byte control code 10><group id 2 bytea><naziv, niz byteova>\0<client id klijenta koji je stvorio grupu><client id1><client id2>...
 
 Prvi poslani clientId je onaj ko je stvorio grupu.
@@ -153,6 +156,7 @@ Control code:
 04 - uspjesno dodan
 F3 - grupa nije aktivna/ne postoji
 F5 - klijent nije aktivan/ne postoji
+F6 - klijent je vec u grupi
 
 4.2 ako je uspjesno dodan salje ostalima:
 <1B control code 12><group id><client id>
@@ -235,7 +239,8 @@ Bilo bi pristojno da onaj koji salje ceka da se ova poruka primi prije nego sto 
 <1 byte, control code>
 
 Control code:
-00 - Nepravilan/neocekivan paket
+00 - Neocekivan paket
+01 - Nepravilan paket
 
 To klijentu tipa javi u posebnom dijelu za serverinfo ili kao dialog box, greska u slanju paketa, pozeljno bi bilo restartat vezu
 
