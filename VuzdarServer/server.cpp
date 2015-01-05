@@ -16,7 +16,7 @@ Server::~Server()
 
 bool Server::startServer(QString password, quint16 port)
 {
-    this->password = password;
+    // !!VAZNO!! sredit password i admininfo
 
     Group *g = new Group(0, "+ All", QList<Client *>()); // nulta grupa, ukljucuje sve
     groups.insert(0, g);
@@ -62,6 +62,10 @@ void Server::processPacket(quint16 id, VuzdarPacket packet)
             // nadimak predugacak
             clients[id]->sendPacket(
                         VuzdarPacket::generateControlCodePacket(VuzdarPacket::REGISTRATION, 0xF1));
+        } else if (false) { // !!VAZNO!! ovdje provjerit jel nadimak bannan
+            // nadimak je bannan
+            clients[id]->sendPacket(
+                        VuzdarPacket::generateControlCodePacket(VuzdarPacket::REGISTRATION, 0xF3));
         } else if (!isNicknameUnique(nickname)) {
             // nadimak nije jedinstven
             clients[id]->sendPacket(
@@ -260,14 +264,18 @@ void Server::processPacket(quint16 id, VuzdarPacket packet)
                                                               groups[groupId]->getClientList()));
             }
         } else {
-            // nepoznati control code, saljem ERROR: nepravilan paket
-            clients[id]->sendPacket(VuzdarPacket::generateControlCodePacket(
-                                        VuzdarPacket::ERROR, 0x01));
+            // nepoznati control code, saljem ERROR: ne prepoznajem paket
+            clients[id]->sendPacket(VuzdarPacket::generateControlCodePacket(VuzdarPacket::ERROR, 0x02));
         }
     } else if (type == VuzdarPacket::DISCONNECT) {
-
+        removeClient(id);
+    } else if (type == VuzdarPacket::MALFORMED_PACKET) {
+        // paket je na neki nacin krivo formiran, ovo (MALFORMED_PACKET) je interni tip
+        clients[id]->sendPacket(VuzdarPacket::generateControlCodePacket(VuzdarPacket::ERROR, 0x01));
+    } else {
+        // ne prepoznajem tip paketa, mozda nova verzija protokola?
+        clients[id]->sendPacket(VuzdarPacket::generateControlCodePacket(VuzdarPacket::ERROR, 0x02));
     }
-
 }
 
 bool Server::isNicknameUnique(QString nickname)

@@ -64,6 +64,7 @@ Control code:
 F0 - neuspjesno registriran - nije jedinstven nadimak
 F1 - neuspjesno registriran - predugacak nadimak
 F2 - neuspjesno registriran - nedopusteni znakovi u nadimku
+F3 - neuspjesno registriran - bannan nadimak
 
 *** Tip 1 - info o aktivnosti klijenta, server salje, ne ocekuje odgovor:
 
@@ -239,8 +240,9 @@ Bilo bi pristojno da onaj koji salje ceka da se ova poruka primi prije nego sto 
 <1 byte, control code>
 
 Control code:
-00 - Neocekivan paket
-01 - Nepravilan paket
+00 - Neocekivan paket (znam sta je, ne ocekujem taj paket u ovom stanju)
+01 - Nepravilan paket (djelomicno prepoznajem paket, ali je krivo formiran)
+02 - Ne prepoznajem paket (ne prepoznajem tip ili control code)
 
 To klijentu tipa javi u posebnom dijelu za serverinfo ili kao dialog box, greska u slanju paketa, pozeljno bi bilo restartat vezu
 

@@ -8,6 +8,7 @@
 #include <QTcpServer>
 #include "../VuzdarCommon/vuzdarpacket.h"
 #include "group.h"
+#include "admininfo.h"
 
 class Client;
 
@@ -33,10 +34,12 @@ private:
     QMap<quint16, Group*> groups;
     quint16 nextClientId;
     quint16 nextGroupId;
-    QString password;
 
     quint16 getNextClientId();
     quint16 getNextGroupId();
+
+    AdminInfo loadData();
+    void saveData();
 
 private slots:
     void createClient();
