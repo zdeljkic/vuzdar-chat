@@ -16,7 +16,7 @@ Client::~Client()
     socket->disconnectFromHost();
 
     if (socket->state() == QTcpSocket::UnconnectedState || socket->waitForDisconnected(1000))
-        delete socket;
+        socket->deleteLater();
 }
 
 void Client::setNickname(QString nickname)

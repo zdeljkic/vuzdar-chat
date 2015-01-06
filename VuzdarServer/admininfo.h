@@ -13,7 +13,7 @@ public:
     // stvari koje treba eksplicitno zadat (password) a ostalo sam postavi
     // i drugi constructor, koji prima sve bitno od starog AdminInfo-a
     // (onog koji je spremljen u datoteku) i iz njega vraca stare podatke
-    AdminInfo(QString password);
+    AdminInfo();
 
     AdminInfo(QByteArray salt, QByteArray hash,
               QList<QString> bannedNicknames,
@@ -28,11 +28,13 @@ public:
               quint32 totalClientsTimeoutDay, quint32 totalClientsTimeoutWeek, quint32 totalClientsTimeoutMonth, quint32 totalClientsTimeoutYear
               );
 
-    void prepareForSaving();
+    void clear();
+    bool isLoadSuccessful();
 
+    void setPassword(QString password);
     bool validatePassword(QString password);
 
-    bool checkBannedNickname(QString nickname);
+    bool isNicknameBanned(QString nickname);
     void addBannedNickname(QString nickname);
     void removeBannedNickname(QString nickname);
 
@@ -63,6 +65,9 @@ public:
     friend QDataStream &operator>>(QDataStream &in, AdminInfo &adminInfo);
 
 private:
+    // postavlja se kod ucitavanja i cita sa isLoadSuccessful()
+    bool loadSuccessful;
+
     // salt i hash, oboje dugacki 256 bita (32 bytea)
     // salt automatski (slucajno) generiran u prvom constructoru
     // uvijek eksplicitno zadani odnosno generirani
@@ -141,6 +146,8 @@ private:
     quint32 totalClientsTimeoutWeek;
     quint32 totalClientsTimeoutMonth;
     quint32 totalClientsTimeoutYear;
+
+    void prepareForSaving();
 };
 
 #endif // ADMININFO_H
