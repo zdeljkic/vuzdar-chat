@@ -18,7 +18,7 @@ public:
     AdminInfo(QByteArray salt, QByteArray hash,
               QList<QString> bannedNicknames,
               quint64 totalTime,
-              QDateTime closingDateTime,
+              QDate closingDate,
               quint32 timeDay, quint32 timeWeek, quint32 timeMonth, quint32 timeYear,
               quint16 minClientsDay, quint16 minClientsWeek, quint16 minClientsMonth, quint16 minClientsYear,
               quint16 maxClientsDay, quint16 maxClientsWeek, quint16 maxClientsMonth, quint16 maxClientsYear,
@@ -28,15 +28,17 @@ public:
               quint32 totalClientsTimeoutDay, quint32 totalClientsTimeoutWeek, quint32 totalClientsTimeoutMonth, quint32 totalClientsTimeoutYear
               );
 
-    ~AdminInfo();
-
     void prepareForSaving();
 
-    void validatePassword(QString password);
+    bool validatePassword(QString password);
 
+    bool checkBannedNickname(QString nickname);
     void addBannedNickname(QString nickname);
     void removeBannedNickname(QString nickname);
 
+    // startTime() postavlja lastStartingTime na trenutni broj milisekunda od ponoci 1.1.1970.
+    // stopTime() oduzima vrijednost lastStartingTime-a od trenutnog broja milisekunda od ponoci 1.1.1970.
+    // i to pridodaje totalTime-u
     void startTime();
     void stopTime();
 
@@ -47,13 +49,18 @@ public:
 
     void increaseMessages();
 
+    // reset funkcije veceg perioda poziva reset funkciju direktno manjeg perioda
+    // npr resetYear() poziva i resetMonth(), koja poziva resetWeek(), koja poziva resetDay()
     void resetDay();
     void resetWeek();
     void resetMonth();
     void resetYear();
 
     QList<QString> getBannedNicknames();
-    QString getStatistics();
+    QString getStatisticsString();
+
+    friend QDataStream &operator<<(QDataStream &out, AdminInfo &adminInfo);
+    friend QDataStream &operator>>(QDataStream &in, AdminInfo &adminInfo);
 
 private:
     // salt i hash, oboje dugacki 256 bita (32 bytea)
@@ -82,7 +89,7 @@ private:
     // ucitava od prije kako bi se znalo jel treba pozvati reset<period>() funkcije.
     // zapisuje se trenutni DateTime u to pozivom funkcije prepareForSaving()
     // koja se automatski poziva u opreatoru <<
-    QDateTime closingDateTime;
+    QDate closingDate;
 
     // numClients i time<period> su potrebni za pracenje prosjecnog broja klijenata
     // numClients je trenutno broj klijenata a time<period> je broj vremenskih jedinica
@@ -135,8 +142,5 @@ private:
     quint32 totalClientsTimeoutMonth;
     quint32 totalClientsTimeoutYear;
 };
-
-QDataStream &operator<<(QDataStream &out, const AdminInfo &adminInfo);
-QDataStream &operator>>(QDataStream &in, AdminInfo &adminInfo);
 
 #endif // ADMININFO_H
