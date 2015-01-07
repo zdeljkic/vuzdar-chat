@@ -7,9 +7,12 @@
 #include <QPair>
 #include <QTcpSocket>
 #include <QTcpServer>
+#include <QFile>
+#include <QTimer>
 #include "../VuzdarCommon/vuzdarpacket.h"
 #include "group.h"
 #include "admininfo.h"
+#include "timer.h"
 
 class Client;
 
@@ -24,6 +27,7 @@ public:
     bool startServer(QString password, quint16 port, bool useOldConfig);
     void stopServer();
     void processPacket(quint16 id, VuzdarPacket packet);
+    void pingClients();
     bool configFileExists();
 
 public slots:
@@ -33,6 +37,7 @@ private:
     QMap<quint16, Client*> clients;
     QMap<quint16, Group*> groups;
     AdminInfo adminInfo;
+    Timer timer;
 
     quint16 nextClientId;
     quint16 nextGroupId;
@@ -46,6 +51,7 @@ private:
 private slots:
     void createClient();
     void removeClient(quint16 id, bool timeout = false);
+    void checkPingResponse();
 
 signals:
     void newInfoText(QString text);

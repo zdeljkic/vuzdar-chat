@@ -1,8 +1,8 @@
 #include "server.h"
 #include "client.h"
-#include <QFile>
 
-Server::Server()
+Server::Server():
+    timer(this, &adminInfo)
 {
     nextClientId = 1;
     nextGroupId = 1;
@@ -57,6 +57,7 @@ bool Server::startServer(QString password, quint16 port, bool useOldConfig)
 
     // uspjesno pokrenut server
     adminInfo.startTime();
+    timer.startTimer();
     return true;
 }
 
@@ -82,6 +83,7 @@ void Server::stopServer()
 
     server.close();
     adminInfo.stopTime();
+    timer.stopTimer();
 
     QFile file("config.dat");
 
@@ -321,6 +323,9 @@ void Server::processPacket(quint16 id, VuzdarPacket packet)
             // nepoznati control code, saljem ERROR: ne prepoznajem paket
             clients[id]->sendPacket(VuzdarPacket::generateControlCodePacket(VuzdarPacket::ERROR, 0x02));
         }
+    } else if(type == VuzdarPacket::PING) {
+        // sta god je ovdje (bilokoji controlCode) interpretiram ko dobar ping reply
+        clients[id]->setAlive(true);
     } else if (type == VuzdarPacket::DISCONNECT) {
         removeClient(id);
     } else if (type == VuzdarPacket::MALFORMED_PACKET) {
@@ -330,6 +335,19 @@ void Server::processPacket(quint16 id, VuzdarPacket packet)
         // ne prepoznajem tip paketa, mozda nova verzija protokola?
         clients[id]->sendPacket(VuzdarPacket::generateControlCodePacket(VuzdarPacket::ERROR, 0x02));
     }
+}
+
+void Server::pingClients()
+{
+    QMap<quint16, Client*>::iterator i;
+
+    for (i = clients.begin(); i != clients.end(); ++i) {
+        i.value()->setAlive(false);
+        i.value()->sendPacket(VuzdarPacket::generateControlCodePacket(
+                                             VuzdarPacket::PING, 0x00));
+    }
+
+    QTimer::singleShot(3000, this, SLOT(checkPingResponse()));
 }
 
 bool Server::configFileExists()
@@ -398,6 +416,11 @@ void Server::createClient()
 
 void Server::removeClient(quint16 id, bool timeout)
 {
+    if (!clients.contains(id)) {
+        qDebug() << "brisem" << id << "timeout" << timeout << "alli on ne postoji";
+        return;
+    }
+
     groups[0]->removeMember(clients[id]);
     delete clients[id];
     clients.remove(id);
@@ -409,10 +432,31 @@ void Server::removeClient(quint16 id, bool timeout)
 
     adminInfo.decreaseClients(timeout);
 
+    qDebug() << "brisem" << id << "timeout" << timeout;
     QString infoText;
     infoText = "Client ";
     infoText += QString::number(id);
     infoText += " disconnected.";
 
     emit newInfoText(infoText);
+}
+
+void Server::checkPingResponse()
+{
+    QMap <quint16, Client*>::const_iterator i;
+    QList<quint16> deleteList;
+
+    for (i = clients.constBegin(); i != clients.constEnd(); ++i) {
+        if (!i.value()->isAlive()) {
+            // posaljemo klijentu da je disconnectan zbog timeouta
+            // za svaki slucaj ako mozda zbog nekog bug-a nije odgovorio na ping itd
+            i.value()->sendPacket(VuzdarPacket::generateControlCodePacket(
+                                      VuzdarPacket::DISCONNECT, 0x12));
+            deleteList.append(i.key());
+        }
+    }
+
+    for (int j = 0; j < deleteList.size(); ++j) {
+        removeClient(deleteList[j], true);
+    }
 }
