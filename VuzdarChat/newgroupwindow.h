@@ -22,6 +22,7 @@ public:
 private:
     QMap<quint16,QPushButton*> mapOfUsers;
     Ui::NewGroupWindow *ui;
+
 signals:
     void createNewGroup(QString groupName,QList<quint16> idList);
 

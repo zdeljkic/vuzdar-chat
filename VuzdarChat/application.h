@@ -7,6 +7,7 @@
 #include "client.h"
 #include "connection.h"
 #include "newgroupwindow.h"
+#include "conversationwindow.h"
 
 namespace Ui {
 class Application;
