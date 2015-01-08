@@ -15,10 +15,13 @@ TEMPLATE = app
 SOURCES += main.cpp\
         application.cpp \
     connection.cpp \
-    client.cpp
+    client.cpp \
+    newgroupwidget.cpp
 
 HEADERS  += application.h \
     connection.h \
-    client.h
+    client.h \
+    newgroupwidget.h
 
-FORMS    += application.ui
+FORMS    += application.ui \
+    newgroupwidget.ui
