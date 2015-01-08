@@ -17,10 +17,13 @@ SOURCES += main.cpp\
     connection.cpp \
     client.cpp \
     ../VuzdarCommon/vuzdarpacket.cpp
+    newgroupwidget.cpp
 
 HEADERS  += application.h \
     connection.h \
     client.h \
     ../VuzdarCommon/vuzdarpacket.h
+    newgroupwidget.h
 
-FORMS    += application.ui
+FORMS    += application.ui \
+    newgroupwidget.ui
