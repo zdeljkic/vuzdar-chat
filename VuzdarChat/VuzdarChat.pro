@@ -17,13 +17,16 @@ SOURCES += main.cpp\
     connection.cpp \
     client.cpp \
     ../VuzdarCommon/vuzdarpacket.cpp \
-    newgroupwindow.cpp
+    newgroupwindow.cpp \
+    conversationwindow.cpp
 
 HEADERS  += application.h \
     connection.h \
     client.h \
     ../VuzdarCommon/vuzdarpacket.h \
-    newgroupwindow.h
+    newgroupwindow.h \
+    conversationwindow.h
 
 FORMS    += application.ui \
-    newgroupwindow.ui
+    newgroupwindow.ui \
+    conversationwindow.ui

@@ -8,6 +8,7 @@
 #include "client.h"
 #include "connection.h"
 #include "newgroupwindow.h"
+#include "conversationwindow.h"
 #include "../VuzdarCommon/vuzdarpacket.h"
 
 namespace Ui {
