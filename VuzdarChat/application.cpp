@@ -44,9 +44,37 @@ void Application::on_disconnectButton_clicked()
     addText("--== Disconnected from the server ==--");
 }
 
-void Application::on_sendButton_clicked()
+void Application::setInputEnabled(Application::State state)
 {
-    connection.sendData(ui->messageText->toPlainText().toUtf8());
-    ui->messageText->setPlainText("");
-    addText("-= Sent message =-");
+    if (state == UNCONNECTED) {
+        ui->hostnameText->setEnabled(true);
+        ui->portText->setEnabled(true);
+        ui->connectButton->setEnabled(true);
+
+        ui->disconnectButton->setEnabled(false);
+        ui->passwordText->setEnabled(false);
+        ui->authButton->setEnabled(false);
+        ui->deauthButton->setEnabled(false);
+        ui->openAdminButton->setEnabled(false);
+    } else if (state == CONNECTED_UNAUTHENTICATED) {
+        ui->hostnameText->setEnabled(false);
+        ui->portText->setEnabled(false);
+        ui->connectButton->setEnabled(false);
+
+        ui->disconnectButton->setEnabled(true);
+        ui->passwordText->setEnabled(true);
+        ui->authButton->setEnabled(true);
+        ui->deauthButton->setEnabled(false);
+        ui->openAdminButton->setEnabled(false);
+    } else if (state == CONNECTED_UNAUTHENTICATED) {
+        ui->hostnameText->setEnabled(false);
+        ui->portText->setEnabled(false);
+        ui->connectButton->setEnabled(false);
+
+        ui->disconnectButton->setEnabled(true);
+        ui->passwordText->setEnabled(false);
+        ui->authButton->setEnabled(false);
+        ui->deauthButton->setEnabled(true);
+        ui->openAdminButton->setEnabled(true);
+    }
 }

@@ -13,6 +13,8 @@ class Application : public QWidget
     Q_OBJECT
 
 public:
+    enum State : quint8 {UNCONNECTED = 0, CONNECTED_UNAUTHENTICATED = 1, CONNECTED_AUTHENTICATED = 2};
+
     explicit Application(QWidget *parent = 0);
     ~Application();
 
@@ -22,12 +24,13 @@ public slots:
 private slots:
     void on_connectButton_clicked();
     void on_disconnectButton_clicked();
-    void on_sendButton_clicked();
 
 private:
     Ui::Application *ui;
     Connection connection;
-    void setInputEnabled(bool enabled);
+    QMap<quint16, Client*> clients;
+
+    void setInputEnabled(State state);
 };
 
 #endif // APPLICATION_H

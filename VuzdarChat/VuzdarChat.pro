@@ -15,10 +15,12 @@ TEMPLATE = app
 SOURCES += main.cpp\
         application.cpp \
     connection.cpp \
-    client.cpp
+    client.cpp \
+    ../VuzdarCommon/vuzdarpacket.cpp
 
 HEADERS  += application.h \
     connection.h \
-    client.h
+    client.h \
+    ../VuzdarCommon/vuzdarpacket.h
 
 FORMS    += application.ui
