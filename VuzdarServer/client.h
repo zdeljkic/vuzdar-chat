@@ -20,6 +20,8 @@ public:
     quint16 getPort();
     void setNickname(QString nickname);
     QString getNickname();
+    bool isAlive();
+    void setAlive(bool alive);
 
     void sendPacket(VuzdarPacket packet);
 
@@ -30,6 +32,7 @@ private:
     QString nickname;
     QTcpSocket *socket;
     Server *server;
+    bool alive;
 
 private slots:
     void receiveData();

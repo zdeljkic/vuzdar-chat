@@ -231,6 +231,7 @@ Control code:
 00 - nema dodatne informacije, rip in pepperoni, ostalo rezervirano za buducnost
 10 - kickan si (kad server salje)
 11 - bannan si (kad server salje)
+12 - timeoutan si (nisam siguran kolko ovo ima smisla)
 
 Bilo bi pristojno da onaj koji salje ceka da se ova poruka primi prije nego sto prekine TCP vezu, al nije tragedija ako ne.
 

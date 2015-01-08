@@ -18,13 +18,15 @@ SOURCES += main.cpp\
     client.cpp \
     ../VuzdarCommon/vuzdarpacket.cpp \
     group.cpp \
-    admininfo.cpp
+    admininfo.cpp \
+    timer.cpp
 
 HEADERS  += application.h \
     server.h \
     client.h \
     ../VuzdarCommon/vuzdarpacket.h \
     group.h \
-    admininfo.h
+    admininfo.h \
+    timer.h
 
 FORMS    += application.ui

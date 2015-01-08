@@ -2,38 +2,9 @@
 #include <QCryptographicHash>
 #include <QDebug>
 
-AdminInfo::AdminInfo(QString password)
+AdminInfo::AdminInfo()
 {
-    qsrand(QDateTime::currentDateTime().toTime_t());
-
-    for (int i = 0; i < 32; ++i) {
-        // dodaj 32 random byte-a u salt
-        // to se radi tako da se dobije random integer, pretvori u raspon od
-        // -128 do 127, casta u signed char i doda na salt
-        salt.append((char) ((qrand() % 256) - 128));
-    }
-
-    QByteArray dataForHashing;
-    dataForHashing.append(salt);
-    dataForHashing.append(password.toUtf8());
-
-    hash = QCryptographicHash::hash(dataForHashing, QCryptographicHash::Sha256);
-
-    bannedNicknames = QList<QString>();
-    totalTime = 0;
-    numClients = 0;
-    timeDay = timeWeek = timeMonth = timeYear = 0;
-    minClientsDay = minClientsWeek = minClientsMonth = minClientsYear = 0;
-    maxClientsDay = maxClientsWeek = maxClientsMonth = maxClientsYear = 0;
-    avgClientsDay = avgClientsWeek = avgClientsMonth = avgClientsYear = 0;
-    totalMessagesDay = totalMessagesWeek = totalMessagesMonth = totalMessagesYear = 0;
-    totalClientsLogoutDay = totalClientsLogoutWeek = totalClientsLogoutMonth = totalClientsLogoutYear = 0;
-    totalClientsTimeoutDay = totalClientsTimeoutWeek = totalClientsTimeoutMonth = totalClientsTimeoutYear = 0;
-
-    qDebug() << "-----";
-    qDebug() << "Salt:" << salt.toHex();
-    qDebug() << "Hash:" << hash.toHex();
-
+    clear();
 }
 
 AdminInfo::AdminInfo(QByteArray salt, QByteArray hash, QList<QString> bannedNicknames, quint64 totalTime, QDate closingDate, quint32 timeDay, quint32 timeWeek, quint32 timeMonth, quint32 timeYear, quint16 minClientsDay, quint16 minClientsWeek, quint16 minClientsMonth, quint16 minClientsYear, quint16 maxClientsDay, quint16 maxClientsWeek, quint16 maxClientsMonth, quint16 maxClientsYear, quint16 avgClientsDay, quint16 avgClientsWeek, quint16 avgClientsMonth, quint16 avgClientsYear, quint32 totalMessagesDay, quint32 totalMessagesWeek, quint32 totalMessagesMonth, quint32 totalMessagesYear, quint32 totalClientsLogoutDay, quint32 totalClientsLogoutWeek, quint32 totalClientsLogoutMonth, quint32 totalClientsLogoutYear, quint32 totalClientsTimeoutDay, quint32 totalClientsTimeoutWeek, quint32 totalClientsTimeoutMonth, quint32 totalClientsTimeoutYear)
@@ -96,9 +67,57 @@ AdminInfo::AdminInfo(QByteArray salt, QByteArray hash, QList<QString> bannedNick
     }
 }
 
+void AdminInfo::clear()
+{
+    salt.clear();
+    hash.clear();
+    bannedNicknames = QList<QString>();
+    totalTime = 0;
+    numClients = 0;
+    timeDay = timeWeek = timeMonth = timeYear = 0;
+    minClientsDay = minClientsWeek = minClientsMonth = minClientsYear = 0;
+    maxClientsDay = maxClientsWeek = maxClientsMonth = maxClientsYear = 0;
+    avgClientsDay = avgClientsWeek = avgClientsMonth = avgClientsYear = 0;
+    totalMessagesDay = totalMessagesWeek = totalMessagesMonth = totalMessagesYear = 0;
+    totalClientsLogoutDay = totalClientsLogoutWeek = totalClientsLogoutMonth = totalClientsLogoutYear = 0;
+    totalClientsTimeoutDay = totalClientsTimeoutWeek = totalClientsTimeoutMonth = totalClientsTimeoutYear = 0;
+}
+
+bool AdminInfo::isLoadSuccessful()
+{
+    return loadSuccessful;
+}
+
 void AdminInfo::prepareForSaving()
 {
     closingDate = QDate::currentDate();
+}
+
+void AdminInfo::setPassword(QString password)
+{
+    // ako je password prazan, clearaj salt i hash
+    // tako efektivno password ne postoji i ne moze se admin spojiti
+    // to je puno bolje opcija od toga da ne postoji password
+    if (password.isEmpty()) {
+        salt.clear();
+        hash.clear();
+        return;
+    }
+
+    qsrand(QDateTime::currentDateTime().toTime_t());
+
+    for (int i = 0; i < 32; ++i) {
+        // dodaj 32 random byte-a u salt
+        // to se radi tako da se dobije random integer, pretvori u raspon od
+        // -128 do 127, casta u signed char i doda na salt
+        salt.append((char) ((qrand() % 256) - 128));
+    }
+
+    QByteArray dataForHashing;
+    dataForHashing.append(salt);
+    dataForHashing.append(password.toUtf8());
+
+    hash = QCryptographicHash::hash(dataForHashing, QCryptographicHash::Sha256);
 }
 
 bool AdminInfo::validatePassword(QString password)
@@ -113,7 +132,7 @@ bool AdminInfo::validatePassword(QString password)
         return false;
 }
 
-bool AdminInfo::checkBannedNickname(QString nickname)
+bool AdminInfo::isNicknameBanned(QString nickname)
 {
     return bannedNicknames.contains(nickname);
 }
@@ -366,7 +385,8 @@ QDataStream &operator>>(QDataStream &in, AdminInfo &adminInfo)
        >> totalClientsLogoutDay >> totalClientsLogoutWeek >> totalClientsLogoutMonth >> totalClientsLogoutYear
        >> totalClientsTimeoutDay >> totalClientsTimeoutWeek >> totalClientsTimeoutMonth >> totalClientsTimeoutYear;
 
-    if (QString::fromUtf8(versionStringUtf8) == QString("VuzdarChat1.0-AdminInfo\n").toUtf8()) {
+    if (in.status() == QDataStream::Ok &&
+            QString::fromUtf8(versionStringUtf8) == QString("VuzdarChat1.0-AdminInfo\n").toUtf8()) {
         // trebalo bi sve bit ok
         adminInfo = AdminInfo(salt, hash,
                               bannedNicknames,
@@ -380,13 +400,10 @@ QDataStream &operator>>(QDataStream &in, AdminInfo &adminInfo)
                               totalClientsLogoutDay, totalClientsLogoutWeek, totalClientsLogoutMonth, totalClientsLogoutYear,
                               totalClientsTimeoutDay, totalClientsTimeoutWeek, totalClientsTimeoutMonth, totalClientsTimeoutYear
                               );
+        adminInfo.loadSuccessful = true;
     } else {
         // kriva verzija il nesto je lose
-        // za sad samo vrati prazan AdminInfo
-        // (ako mu damo prazan password to je kao da nema passworda,
-        // tj stavit ce hash i salt na QByteArray() kojem ni jedan
-        // hash(salt + password) nece biti jednak)
-        adminInfo = AdminInfo("");
+        adminInfo.loadSuccessful = false;
     }
 
     return in;

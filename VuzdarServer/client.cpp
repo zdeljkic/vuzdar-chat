@@ -13,10 +13,12 @@ Client::Client(quint16 id, QTcpSocket *socket, Server *server)
 
 Client::~Client()
 {
+    disconnect(socket, SIGNAL(disconnected()), this, SLOT(disconnecting()));
+
     socket->disconnectFromHost();
 
     if (socket->state() == QTcpSocket::UnconnectedState || socket->waitForDisconnected(1000))
-        delete socket;
+        socket->deleteLater();
 }
 
 void Client::setNickname(QString nickname)
@@ -32,6 +34,16 @@ quint16 Client::getId()
 QString Client::getNickname()
 {
     return nickname;
+}
+
+bool Client::isAlive()
+{
+    return alive;
+}
+
+void Client::setAlive(bool alive)
+{
+    this->alive = alive;
 }
 
 void Client::sendPacket(VuzdarPacket packet)

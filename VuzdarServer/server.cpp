@@ -1,7 +1,8 @@
 #include "server.h"
 #include "client.h"
 
-Server::Server()
+Server::Server():
+    timer(this, &adminInfo)
 {
     nextClientId = 1;
     nextGroupId = 1;
@@ -14,14 +15,50 @@ Server::~Server()
     stopServer();
 }
 
-bool Server::startServer(QString password, quint16 port)
+bool Server::startServer(QString password, quint16 port, bool useOldConfig)
 {
-    // !!VAZNO!! sredit password i admininfo
+    // ucitaj stari config ako je to potrebno
+    if (useOldConfig) {
+        if (!configFileExists()) {
+            emit newInfoText("Configuration file doesn't exist.");
+            return false;
+        }
+
+        QFile file("config.dat");
+        if (!file.open(QIODevice::ReadOnly)) {
+            emit newInfoText("Unable to open configuration file for reading.");
+            return false;
+        }
+
+        QDataStream in(&file);
+        in.setVersion(QDataStream::Qt_5_4);
+        in >> adminInfo;
+        file.close();
+
+        if (adminInfo.isLoadSuccessful()) {
+            emit newInfoText("Configuration file loaded.");
+        } else {
+            emit newInfoText("Unable to load configuration file.");
+            return false;
+        }
+    } else {
+        adminInfo.clear();
+        adminInfo.setPassword(password);
+    }
 
     Group *g = new Group(0, "+ All", QList<Client *>()); // nulta grupa, ukljucuje sve
     groups.insert(0, g);
 
-    return server.listen(QHostAddress::Any, port);
+    if (!server.listen(QHostAddress::Any, port)) {
+        // nemogu pokrenut server iz nepoznatih razloga
+        emit newInfoText("Unable to star server (unknown reason).");
+        return false;
+    }
+
+    // uspjesno pokrenut server
+    adminInfo.startTime();
+    timer.startTimer();
+    return true;
 }
 
 void Server::stopServer()
@@ -45,6 +82,23 @@ void Server::stopServer()
     nextGroupId = 1;
 
     server.close();
+    adminInfo.stopTime();
+    timer.stopTimer();
+
+    QFile file("config.dat");
+
+    if (!file.open(QIODevice::WriteOnly)) {
+        emit newInfoText("Unable to save configuranion file.");
+        return;
+    }
+
+    QDataStream out(&file);
+    out.setVersion(QDataStream::Qt_5_4);
+    out << adminInfo;
+    file.close();
+
+    emit newInfoText("Configuration file saved.");
+    emit newInfoText(adminInfo.getStatisticsString()); // !!DEBUG!!
 }
 
 void Server::processPacket(quint16 id, VuzdarPacket packet)
@@ -62,7 +116,7 @@ void Server::processPacket(quint16 id, VuzdarPacket packet)
             // nadimak predugacak
             clients[id]->sendPacket(
                         VuzdarPacket::generateControlCodePacket(VuzdarPacket::REGISTRATION, 0xF1));
-        } else if (false) { // !!VAZNO!! ovdje provjerit jel nadimak bannan
+        } else if (adminInfo.isNicknameBanned(nickname) == true) {
             // nadimak je bannan
             clients[id]->sendPacket(
                         VuzdarPacket::generateControlCodePacket(VuzdarPacket::REGISTRATION, 0xF3));
@@ -110,6 +164,7 @@ void Server::processPacket(quint16 id, VuzdarPacket packet)
             // sve ok:
             // 1. njemu odgovaram da je sve ok
             // 2. saljem poruku primatelju
+            adminInfo.increaseMessages();
 
             // 1.
             clients[id]->sendPacket(VuzdarPacket::generateControlCodeIdPacket(
@@ -137,6 +192,7 @@ void Server::processPacket(quint16 id, VuzdarPacket packet)
                 // poruka je dobra:
                 // 1. reci mu to
                 // 2. proslijedi svima poruku
+                adminInfo.increaseMessages();
 
                 // 1.
                 clients[id]->sendPacket(VuzdarPacket::generateControlCodeIdPacket(
@@ -267,6 +323,9 @@ void Server::processPacket(quint16 id, VuzdarPacket packet)
             // nepoznati control code, saljem ERROR: ne prepoznajem paket
             clients[id]->sendPacket(VuzdarPacket::generateControlCodePacket(VuzdarPacket::ERROR, 0x02));
         }
+    } else if(type == VuzdarPacket::PING) {
+        // sta god je ovdje (bilokoji controlCode) interpretiram ko dobar ping reply
+        clients[id]->setAlive(true);
     } else if (type == VuzdarPacket::DISCONNECT) {
         removeClient(id);
     } else if (type == VuzdarPacket::MALFORMED_PACKET) {
@@ -276,6 +335,24 @@ void Server::processPacket(quint16 id, VuzdarPacket packet)
         // ne prepoznajem tip paketa, mozda nova verzija protokola?
         clients[id]->sendPacket(VuzdarPacket::generateControlCodePacket(VuzdarPacket::ERROR, 0x02));
     }
+}
+
+void Server::pingClients()
+{
+    QMap<quint16, Client*>::iterator i;
+
+    for (i = clients.begin(); i != clients.end(); ++i) {
+        i.value()->setAlive(false);
+        i.value()->sendPacket(VuzdarPacket::generateControlCodePacket(
+                                             VuzdarPacket::PING, 0x00));
+    }
+
+    QTimer::singleShot(3000, this, SLOT(checkPingResponse()));
+}
+
+bool Server::configFileExists()
+{
+    return QFile::exists("config.dat");
 }
 
 bool Server::isNicknameUnique(QString nickname)
@@ -323,20 +400,27 @@ void Server::createClient()
 
     clients[nextClientId] = newClient;
 
+    adminInfo.increaseClients();
+
     QString infoText;
-    infoText = "-= New client connected from ";
+    infoText = "New client connected from ";
     infoText += newClient->getAddress().toString();
     infoText += ":";
     infoText += QString::number(newClient->getPort());
     infoText += ", client id = ";
     infoText += QString::number(newClient->getId());
-    infoText += " =-";
+    infoText += ".";
 
     emit newInfoText(infoText);
 }
 
-void Server::removeClient(quint16 id)
+void Server::removeClient(quint16 id, bool timeout)
 {
+    if (!clients.contains(id)) {
+        qDebug() << "brisem" << id << "timeout" << timeout << "alli on ne postoji";
+        return;
+    }
+
     groups[0]->removeMember(clients[id]);
     delete clients[id];
     clients.remove(id);
@@ -346,10 +430,33 @@ void Server::removeClient(quint16 id)
 
     groups[0]->sendPacket(VuzdarPacket::generateDeadClientPacket(list));
 
+    adminInfo.decreaseClients(timeout);
+
+    qDebug() << "brisem" << id << "timeout" << timeout;
     QString infoText;
-    infoText = "-= Client ";
+    infoText = "Client ";
     infoText += QString::number(id);
-    infoText += " disconnected =-";
+    infoText += " disconnected.";
 
     emit newInfoText(infoText);
+}
+
+void Server::checkPingResponse()
+{
+    QMap <quint16, Client*>::const_iterator i;
+    QList<quint16> deleteList;
+
+    for (i = clients.constBegin(); i != clients.constEnd(); ++i) {
+        if (!i.value()->isAlive()) {
+            // posaljemo klijentu da je disconnectan zbog timeouta
+            // za svaki slucaj ako mozda zbog nekog bug-a nije odgovorio na ping itd
+            i.value()->sendPacket(VuzdarPacket::generateControlCodePacket(
+                                      VuzdarPacket::DISCONNECT, 0x12));
+            deleteList.append(i.key());
+        }
+    }
+
+    for (int j = 0; j < deleteList.size(); ++j) {
+        removeClient(deleteList[j], true);
+    }
 }
