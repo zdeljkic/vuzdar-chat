@@ -33,7 +33,7 @@ public:
     QList<QString> getBannedNicknameList();
     QString getAdminString();
 
-    static quint16 getExpectedLength(QByteArray data);
+    static VuzdarPacket chopBuffer(QByteArray &buffer);
     static VuzdarPacket generateControlCodePacket(PacketType type, quint8 controlCode);
     static VuzdarPacket generateControlCodeIdPacket(PacketType type, quint8 controlCode, quint16 id);
     static VuzdarPacket generateRegistrationPacket(QString nickname);

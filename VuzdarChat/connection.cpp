@@ -36,17 +36,13 @@ void Connection::disconnectFromServer()
     socket.abort();
 }
 
-void Connection::sendData(QByteArray data)
+void Connection::sendPacket(VuzdarPacket packet)
 {
-    socket.write(data);
+    socket.write(packet.getRawData());
 }
 
 void Connection::receiveData()
 {
-    QString infoText(socket.readAll());
-
-    infoText.prepend("-= Received message: ");
-    infoText.append(" =-");
-
-    emit newInfoText(infoText);
+    // !!VAZNO!! treba sredit sjeckanje paketa
+    emit newPacket(VuzdarPacket(socket.readAll()));
 }

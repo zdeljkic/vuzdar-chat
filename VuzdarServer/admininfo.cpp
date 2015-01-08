@@ -302,10 +302,10 @@ QString AdminInfo::getStatisticsString()
     int lm = (currentTime / (1000 * 60)) % 60;
     int lh = currentTime / (1000 * 60 * 60);
 
-    double pd = (double) totalClientsTimeoutDay / (totalClientsTimeoutDay + totalClientsLogoutDay);
-    double pw = (double) totalClientsTimeoutWeek / (totalClientsTimeoutWeek + totalClientsLogoutWeek);
-    double pm = (double) totalClientsTimeoutMonth / (totalClientsTimeoutMonth + totalClientsLogoutMonth);
-    double py = (double) totalClientsTimeoutYear / (totalClientsTimeoutYear + totalClientsLogoutYear);
+    double pd = 100 * (double) totalClientsTimeoutDay / (totalClientsTimeoutDay + totalClientsLogoutDay);
+    double pw = 100 * (double) totalClientsTimeoutWeek / (totalClientsTimeoutWeek + totalClientsLogoutWeek);
+    double pm = 100 * (double) totalClientsTimeoutMonth / (totalClientsTimeoutMonth + totalClientsLogoutMonth);
+    double py = 100 * (double) totalClientsTimeoutYear / (totalClientsTimeoutYear + totalClientsLogoutYear);
 
     statisticsString += QString("Uptime (total): ") += QString::number(h) += QString(" hours, ")
             += QString::number(m) += QString(" minutes and ") += QString::number(s) += QString(" seconds\n");

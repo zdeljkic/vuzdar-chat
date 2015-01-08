@@ -33,6 +33,7 @@ private:
     QTcpSocket *socket;
     Server *server;
     bool alive;
+    QByteArray buffer;
 
 private slots:
     void receiveData();

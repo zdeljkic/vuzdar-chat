@@ -69,23 +69,23 @@ quint16 Client::getPort()
 
 void Client::receiveData()
 {
-    QByteArray data = socket->readAll();
+    // dodaj podatke bufferu i "nasjeckaj" u pakete
+    buffer += socket->readAll();
 
-    /*
-     * !!VAZNO!!
-     * Ovdje bi bilo dobro napraviti da "sjecka" podakte koje prima u pakete
-     * i salje ih tako serveru (pomocu nekog buffera), za slucaj da 1 VuzdarPacket
-     * nije strpan tocno u 1 TCP paket. Trenutno to nije potrebno ako je klijent
-     * bas nas VuzdarChat, al ono bilo bi ok to ubuduce napravit.
-     */
+    VuzdarPacket packet = VuzdarPacket::chopBuffer(buffer);
+
+    if (packet.getType() == VuzdarPacket::MALFORMED_PACKET && packet.getControlCode() == 0x00) {
+        // nedovoljno podataka u bufferu, pozovat ce se opet kad se napuni buffer
+        return;
+    }
 
     // !!DEBUG!!
     qDebug() << "Recieved packet";
     qDebug() << "From:" << id;
-    qDebug() << "Data:" << data.toHex();
+    qDebug() << "Data:" << packet.getRawData().toHex();
     qDebug() << "-----";
 
-    server->processPacket(id, VuzdarPacket(data));
+    server->processPacket(id, packet);
 }
 
 void Client::disconnecting()

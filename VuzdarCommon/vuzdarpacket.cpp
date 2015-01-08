@@ -9,6 +9,7 @@ VuzdarPacket::VuzdarPacket(QByteArray data)
 
     if (length != data.size() - 3) {
         type = MALFORMED_PACKET;
+        data[3] = 0xFF;
     }
 }
 
@@ -177,9 +178,30 @@ QString VuzdarPacket::getAdminString()
     return QString(data.mid(4, length - 1));
 }
 
-quint16 VuzdarPacket::getExpectedLength(QByteArray data)
+VuzdarPacket VuzdarPacket::chopBuffer(QByteArray &buffer)
 {
-    return convert(data[1], data[2]);
+    /*
+     * !!VAZNO!! treba istestirat ovo rucno jel dobro radi
+     * Control codes:
+     * 0x00 - nedovoljno podataka, pozovi kad jos napunis buffer
+     */
+
+    if (buffer.size() < 3) {
+        // nemogu ni procitat duljinu
+        return generateControlCodePacket(MALFORMED_PACKET, 0x00);
+    }
+
+    quint16 size = convert(buffer[1], buffer[2]) + 3;
+
+    if (buffer.size() < size) {
+        // procito velicinu, u bufferu nema dovoljno podataka
+        return generateControlCodePacket(MALFORMED_PACKET, 0x00);
+    }
+
+    QByteArray rawData = buffer.left(size);
+    buffer = buffer.mid(size);
+
+    return VuzdarPacket(rawData);
 }
 
 VuzdarPacket VuzdarPacket::generateControlCodePacket(VuzdarPacket::PacketType type, quint8 controlCode)

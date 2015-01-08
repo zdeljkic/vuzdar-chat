@@ -4,6 +4,7 @@
 #include <QObject>
 #include <QTcpSocket>
 #include <QHostAddress>
+#include "../VuzdarCommon/vuzdarpacket.h"
 
 class Connection : public QObject
 {
@@ -14,7 +15,7 @@ public:
     quint16 getPort();
     bool connectToServer(QString hostname, quint16 port);
     void disconnectFromServer();
-    void sendData(QByteArray data);
+    void sendPacket(VuzdarPacket packet);
 
 public slots:
 
@@ -25,7 +26,7 @@ private slots:
     void receiveData();
 
 signals:
-    void newInfoText(QString text);
+    void newPacket(VuzdarPacket packet);
 };
 
 #endif // CONNECTION_H

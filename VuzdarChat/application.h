@@ -4,9 +4,11 @@
 #include <QWidget>
 #include <QMap>
 #include <QList>
+#include <QPair>
 #include "client.h"
 #include "connection.h"
 #include "newgroupwindow.h"
+#include "../VuzdarCommon/vuzdarpacket.h"
 
 namespace Ui {
 class Application;
@@ -17,7 +19,7 @@ class Application : public QWidget
     Q_OBJECT
 
 public:
-    enum State : quint8 {UNCONNECTED = 0, CONNECTED_UNAUTHENTICATED = 1, CONNECTED_AUTHENTICATED = 2};
+    enum State : quint8 {UNCONNECTED = 0, REGISTERING = 1, CONNECTED_UNAUTHENTICATED = 2, CONNECTED_AUTHENTICATED = 3};
 
     explicit Application(QWidget *parent = 0);
     ~Application();
@@ -30,14 +32,19 @@ private slots:
     void on_disconnectButton_clicked();
     void on_newGroupButton_clicked();
 
+    void processPacket(VuzdarPacket packet);
     void createNewGroup(QString name, QList<quint16> idList);
 
 private:
     Ui::Application *ui;
     Connection connection;
-    QList<Client*> clients;
+    QMap<quint16, Client*> clients;
+    State state;
+    quint16 myId;
+    QString myNickname;
 
-    void setInputEnabled(State state);
+    void changeState(State state);
+    QList<Client*> getClientList();
 };
 
 #endif // APPLICATION_H

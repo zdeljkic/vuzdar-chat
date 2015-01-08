@@ -53,12 +53,18 @@
          </size>
         </property>
         <property name="text">
-         <string>Hostname or IP Address:</string>
+         <string>Hostname:</string>
         </property>
        </widget>
       </item>
       <item>
        <widget class="QLineEdit" name="hostnameText">
+        <property name="maximumSize">
+         <size>
+          <width>16777215</width>
+          <height>16777215</height>
+         </size>
+        </property>
         <property name="text">
          <string>localhost</string>
         </property>
@@ -76,6 +82,12 @@
       </item>
       <item>
        <widget class="QLineEdit" name="portText">
+        <property name="maximumSize">
+         <size>
+          <width>60</width>
+          <height>16777215</height>
+         </size>
+        </property>
         <property name="text">
          <string>12345</string>
         </property>
@@ -83,6 +95,16 @@
          <set>Qt::AlignRight|Qt::AlignTrailing|Qt::AlignVCenter</set>
         </property>
        </widget>
+      </item>
+      <item>
+       <widget class="QLabel" name="nicknameLabel">
+        <property name="text">
+         <string>Nickname:</string>
+        </property>
+       </widget>
+      </item>
+      <item>
+       <widget class="QLineEdit" name="nicknameText"/>
       </item>
       <item>
        <widget class="QPushButton" name="connectButton">
@@ -182,7 +204,7 @@
     </widget>
    </item>
    <item>
-    <widget class="QPlainTextEdit" name="displayText">
+    <widget class="QTextEdit" name="displayText">
      <property name="minimumSize">
       <size>
        <width>0</width>
@@ -194,9 +216,6 @@
        <width>16777215</width>
        <height>100</height>
       </size>
-     </property>
-     <property name="readOnly">
-      <bool>true</bool>
      </property>
     </widget>
    </item>
