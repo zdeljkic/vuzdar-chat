@@ -2,7 +2,11 @@
 #define APPLICATION_H
 
 #include <QWidget>
-#include <connection.h>
+#include <QMap>
+#include <QList>
+#include "client.h"
+#include "connection.h"
+#include "newgroupwindow.h"
 
 namespace Ui {
 class Application;
@@ -24,11 +28,14 @@ public slots:
 private slots:
     void on_connectButton_clicked();
     void on_disconnectButton_clicked();
+    void on_newGroupButton_clicked();
+
+    void createNewGroup(QString name, QList<quint16> idList);
 
 private:
     Ui::Application *ui;
     Connection connection;
-    QMap<quint16, Client*> clients;
+    QList<Client*> clients;
 
     void setInputEnabled(State state);
 };

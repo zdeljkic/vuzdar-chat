@@ -78,3 +78,24 @@ void Application::setInputEnabled(Application::State state)
         ui->openAdminButton->setEnabled(true);
     }
 }
+
+void Application::on_newGroupButton_clicked()
+{
+    // !!DEBUG!!
+    Client *c = new Client(1, "antun");
+    clients.append(c);
+    c = new Client(2, "borna");
+    clients.append(c);
+    c = new Client(3, "žad");
+    clients.append(c);
+
+    NewGroupWindow *ngw = new NewGroupWindow(clients);
+    connect(ngw, SIGNAL(createNewGroup(QString,QList<quint16>)), this, SLOT(createNewGroup(QString,QList<quint16>)));
+
+    ngw->show();
+}
+
+void Application::createNewGroup(QString name, QList<quint16> idList)
+{
+    qDebug() << "nova grupa:" << name << "id-evi:" << idList;
+}

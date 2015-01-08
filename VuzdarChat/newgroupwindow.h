@@ -1,5 +1,5 @@
-#ifndef NEWGROUPWIDGET_H
-#define NEWGROUPWIDGET_H
+#ifndef NEWGROUPWINDOW_H
+#define NEWGROUPWINDOW_H
 
 #include <QWidget>
 #include <QPushButton>
@@ -7,21 +7,21 @@
 #include <client.h>
 
 namespace Ui {
-class NewGroupWidget;
+class NewGroupWindow;
 }
 
-class NewGroupWidget : public QWidget
+class NewGroupWindow : public QWidget
 {
     Q_OBJECT
 
 public:
-    explicit NewGroupWidget(QList<Client *> clients, QWidget *parent = 0);
-    ~NewGroupWidget();
+    explicit NewGroupWindow(QList<Client *> clients, QWidget *parent = 0);
+    ~NewGroupWindow();
 
 
 private:
     QMap<quint16,QPushButton*> mapOfUsers;
-    Ui::NewGroupWidget *ui;
+    Ui::NewGroupWindow *ui;
 signals:
     void createNewGroup(QString groupName,QList<quint16> idList);
 
@@ -29,4 +29,4 @@ private slots:
     void on_newGroupButton_clicked();
 };
 
-#endif // NEWGROUPWIDGET_H
+#endif // NEWGROUPWINDOW_H
