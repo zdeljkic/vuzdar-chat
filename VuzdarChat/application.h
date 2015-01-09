@@ -2,6 +2,7 @@
 #define APPLICATION_H
 
 #include <QWidget>
+#include <QVBoxLayout>
 #include <QMap>
 #include <QList>
 #include <QPair>

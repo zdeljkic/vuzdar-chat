@@ -80,12 +80,13 @@ void Client::receiveData()
     }
 
     // !!DEBUG!!
-    qDebug() << "Recieved packet";
+    qDebug() << "Received packet";
     qDebug() << "From:" << id;
     qDebug() << "Data:" << packet.getRawData().toHex();
     qDebug() << "-----";
 
     server->processPacket(id, packet);
+    receiveData();
 }
 
 void Client::disconnecting()

@@ -6,6 +6,7 @@ Application::Application(QWidget *parent) :
     ui(new Ui::Application)
 {
     ui->setupUi(this);
+    ui->clientGroupBox->setLayout(new QVBoxLayout(ui->clientGroupBox));
     state = UNCONNECTED;
 
     connect(&connection, SIGNAL(newPacket(VuzdarPacket)), this, SLOT(processPacket(VuzdarPacket)));
@@ -167,7 +168,9 @@ void Application::processPacket(VuzdarPacket packet)
             for (int i = 0; i < list.size(); ++i) {
                 if (!clients.contains(list[i].first)) {
                     Client *c = new Client(list[i].first, list[i].second);
-                    clients.insert(list[i], c);
+                    clients.insert(list[i].first, c);
+
+                    ui->clientGroupBox->layout()->addWidget(c->getButton());
 
                     if (list[i].second == ui->nicknameText->text()) {
                         // to je ovaj klijent u listi
@@ -192,6 +195,9 @@ void Application::processPacket(VuzdarPacket packet)
         } else {
             addText("--== Unknow client activity message, ignoring ==--");
         }
+    } else if (type == VuzdarPacket::PING) {
+        connection.sendPacket(VuzdarPacket::generateControlCodePacket(
+                                  VuzdarPacket::PING, 0x00));
     }
 }
 

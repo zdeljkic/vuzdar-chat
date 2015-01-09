@@ -4,6 +4,7 @@
 #include <QObject>
 #include <QTcpSocket>
 #include <QHostAddress>
+#include <QByteArray>
 #include "../VuzdarCommon/vuzdarpacket.h"
 
 class Connection : public QObject
@@ -21,6 +22,7 @@ public slots:
 
 private:
     QTcpSocket socket;
+    QByteArray buffer;
 
 private slots:
     void receiveData();

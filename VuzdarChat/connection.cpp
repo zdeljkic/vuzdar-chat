@@ -43,6 +43,21 @@ void Connection::sendPacket(VuzdarPacket packet)
 
 void Connection::receiveData()
 {
-    // !!VAZNO!! treba sredit sjeckanje paketa
-    emit newPacket(VuzdarPacket(socket.readAll()));
+    // dodaj podatke bufferu i "nasjeckaj" u pakete
+    buffer += socket.readAll();
+
+    VuzdarPacket packet = VuzdarPacket::chopBuffer(buffer);
+
+    if (packet.getType() == VuzdarPacket::MALFORMED_PACKET && packet.getControlCode() == 0x00) {
+        // nedovoljno podataka u bufferu, pozovat ce se opet kad se napuni buffer
+        return;
+    }
+
+    // !!DEBUG!!
+    qDebug() << "Received packet";
+    qDebug() << "Data:" << packet.getRawData().toHex();
+    qDebug() << "-----";
+
+    emit newPacket(packet);
+    receiveData();
 }
