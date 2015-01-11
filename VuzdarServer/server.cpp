@@ -327,6 +327,7 @@ void Server::processPacket(quint16 id, VuzdarPacket packet)
         // sta god je ovdje (bilokoji controlCode) interpretiram ko dobar ping reply
         clients[id]->setAlive(true);
     } else if (type == VuzdarPacket::DISCONNECT) {
+        qDebug() << "dobio sam disconnect paket, pozivam removeclient id:" << id;
         removeClient(id);
     } else if (type == VuzdarPacket::MALFORMED_PACKET) {
         // paket je na neki nacin krivo formiran, ovo (MALFORMED_PACKET) je interni tip
@@ -422,7 +423,7 @@ void Server::removeClient(quint16 id, bool timeout)
     }
 
     groups[0]->removeMember(clients[id]);
-    delete clients[id];
+    clients[id]->deleteLater();
     clients.remove(id);
 
     QList<quint16> list;
@@ -457,6 +458,7 @@ void Server::checkPingResponse()
     }
 
     for (int j = 0; j < deleteList.size(); ++j) {
+        qDebug() << "nije odgovorio na ping, brisem klijenta id" << deleteList[j];
         removeClient(deleteList[j], true);
     }
 }

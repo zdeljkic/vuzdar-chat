@@ -13,12 +13,10 @@ Client::Client(quint16 id, QTcpSocket *socket, Server *server)
 
 Client::~Client()
 {
-    disconnect(socket, SIGNAL(disconnected()), this, SLOT(disconnecting()));
-
     socket->disconnectFromHost();
 
     if (socket->state() == QTcpSocket::UnconnectedState || socket->waitForDisconnected(1000))
-        socket->deleteLater();
+        delete socket;
 }
 
 void Client::setNickname(QString nickname)
@@ -91,5 +89,6 @@ void Client::receiveData()
 
 void Client::disconnecting()
 {
+    qDebug() << "Klijent je kuzio da se diskonekta, emitira signalremoval, id:" << id;
     emit signalRemoval(id);
 }
