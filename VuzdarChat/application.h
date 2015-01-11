@@ -6,6 +6,7 @@
 #include <QMap>
 #include <QList>
 #include <QPair>
+#include <QCloseEvent>
 #include "client.h"
 #include "connection.h"
 #include "newgroupwindow.h"
@@ -35,6 +36,8 @@ private slots:
     void on_newGroupButton_clicked();
 
     void processPacket(VuzdarPacket packet);
+    void saveHtmlConversation(quint16 id, QString conversation);
+    void sendMessage(quint16 id, QString message);
     void createNewGroup(QString name, QList<quint16> idList);
 
 private:
@@ -47,6 +50,7 @@ private:
 
     void changeState(State state);
     QList<Client*> getClientList();
+    void addClientButton(QPushButton *button);
 };
 
 #endif // APPLICATION_H

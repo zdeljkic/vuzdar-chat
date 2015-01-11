@@ -7,6 +7,7 @@ NewGroupWindow::NewGroupWindow(QList<Client*> clients, QWidget *parent) :
     ui(new Ui::NewGroupWindow)
 {
     ui->setupUi(this);
+    setAttribute(Qt::WA_QuitOnClose, false);
 
     QVBoxLayout* layout = new QVBoxLayout(ui->scrollAreaWidgetContents);
     QPushButton *button[clients.size()];

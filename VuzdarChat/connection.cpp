@@ -33,12 +33,20 @@ void Connection::disconnectFromServer()
 {
     // ovo isto treba bolje nakodirat, da salje postenu VuzdarProtocol disconnect poruku
     // i da onda koristi disconnectFromHost i postepeno se disconnecta
-    socket.abort();
+    socket.disconnectFromHost();
+
+    if (socket.state() == QTcpSocket::UnconnectedState || socket.waitForDisconnected(1000))
+        return;
 }
 
 void Connection::sendPacket(VuzdarPacket packet)
 {
     socket.write(packet.getRawData());
+
+    // !!DEBUG!!
+    qDebug() << "Sent packet";
+    qDebug() << "Data:" << packet.getRawData().toHex();
+    qDebug() << "-----";
 }
 
 void Connection::receiveData()

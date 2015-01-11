@@ -6,7 +6,9 @@ ConversationWindow::ConversationWindow(QString title, QWidget *parent) :
     ui(new Ui::ConversationWindow)
 {
     ui->setupUi(this);
-    this->setWindowTitle(title);
+    setAttribute(Qt::WA_QuitOnClose, false);
+
+    setWindowTitle(title);
 }
 
 ConversationWindow::~ConversationWindow()
@@ -16,22 +18,21 @@ ConversationWindow::~ConversationWindow()
 
 void ConversationWindow::showSystemMessage(QString message, QString color)
 {
-    ui->conversationText->insertHtml(QString("<font color=" + color + ">" + message + "</font><br />"));
+    ui->conversationText->insertHtml(QString("<font color=" + color + ">" + message + "</font><br>"));
 }
 
 void ConversationWindow::showClientMessage(QString name, QString message, QString color)
 {
-    ui->conversationText->insertHtml(QString("<font color=" + color + ">" + name + ": " + "</font>" + message + "\n"));
+    ui->conversationText->insertHtml(QString("<font color=" + color + ">" + name + ": " + "</font>" + message + "<br>"));
 }
-
-
 
 void ConversationWindow::on_saveConversationButton_clicked()
 {
-    emit(saveHtmlConversation(ui->conversationText->toHtml()));
+    emit saveHtmlConversation(ui->conversationText->toHtml());
 }
 
 void ConversationWindow::on_sendButton_clicked()
 {
-    emit(sendMessage(ui->messageText->toPlainText()));
+    emit sendMessage(ui->messageText->toPlainText());
+    ui->messageText->setHtml("");
 }
