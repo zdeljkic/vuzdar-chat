@@ -8,25 +8,27 @@
 #include <QQueue>
 #include "conversationwindow.h"
 
-class Client : public QObject
+class Conversation : public QObject
 {
     Q_OBJECT
 
 public:
-    Client(quint16 id, QString nickname);
-    ~Client();
+    Conversation(bool isClient, quint16 id, QString name);
+    ~Conversation();
 
+    quint16 setId(quint16 id);
     quint16 getId();
-    QString getNickname();
+    QString getName();
     QPushButton *getButton();
 
     void showSystemMessage(QString message, QString color = QString("black"));
-    void showClientMessage(QString message, QString color = QString("black"));
-    void showMessageReply(bool successful);
+    void showClientMessage(QString nickname, QString message, QString color = QString("black"));
+    void signalMessageReply(bool successful);
 
 private:
+    bool isClient;
     quint16 id;
-    QString nickname;
+    QString name;
     QPushButton button;
     ConversationWindow conversationWindow;
     QQueue<QString> messageQueue;
@@ -36,8 +38,8 @@ private slots:
     void forwardSendMessage(QString message);
 
 signals:
-    void saveHtmlConversation(quint16 id, QString conversation);
-    void sendMessage(quint16 id, QString message);
+    void saveHtmlConversation(bool isClient, quint16 id, QString conversation);
+    void sendMessage(bool isClient, quint16 id, QString message);
 };
 
 #endif // CLIENT_H

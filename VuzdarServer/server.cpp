@@ -156,8 +156,8 @@ void Server::processPacket(quint16 id, VuzdarPacket packet)
             // klijent neaktivan/ne postoji
             clients[id]->sendPacket(
                         VuzdarPacket::generateControlCodeIdPacket(VuzdarPacket::TEXT_PRIVATE_MESSAGE, 0xF0, packet.getId()));
-        } else if (packet.getMessage().isNull()) {
-            // poruka sadrzi nepodrzane znakove
+        } else if (packet.getMessage().isEmpty()) {
+            // poruka sadrzi nepodrzane znakove (ili je prazna)
             clients[id]->sendPacket(
                         VuzdarPacket::generateControlCodeIdPacket(VuzdarPacket::TEXT_PRIVATE_MESSAGE, 0xF1, packet.getId()));
         } else {

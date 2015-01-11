@@ -1,50 +1,57 @@
-#include "client.h"
+#include "conversation.h"
 
-Client::Client(quint16 id, QString nickname):
-    button(nickname),
-    conversationWindow(QString(nickname).append(" - VuzdarChat"))
+Conversation::Conversation(bool isClient, quint16 id, QString name):
+    button(name),
+    conversationWindow(QString(name).append(" - VuzdarChat")),
+    isClient(isClient), id(id), name(name)
 {
-    this->id = id;
-    this->nickname = nickname;
-
     connect(&button, SIGNAL(clicked()), &conversationWindow, SLOT(show()));
 
     connect(&conversationWindow, SIGNAL(saveHtmlConversation(QString)), this, SLOT(forwardSaveHtmlConversation(QString)));
     connect(&conversationWindow, SIGNAL(sendMessage(QString)), this, SLOT(forwardSendMessage(QString)));
 }
 
-Client::~Client() {
+Conversation::~Conversation() {
     conversationWindow.deleteLater();
 }
 
-quint16 Client::getId()
+quint16 Conversation::setId(quint16 id)
+{
+    this->id = id;
+}
+
+quint16 Conversation::getId()
 {
     return id;
 }
 
-QString Client::getNickname()
+QString Conversation::getName()
 {
-    return nickname;
+    return name;
 }
 
-QPushButton *Client::getButton()
+QPushButton *Conversation::getButton()
 {
     return &button;
 }
 
-void Client::showSystemMessage(QString message, QString color)
+void Conversation::showSystemMessage(QString message, QString color)
 {
     conversationWindow.show();
+    conversationWindow.raise();
+    conversationWindow.activateWindow();
     conversationWindow.showSystemMessage(message, color);
 }
 
-void Client::showClientMessage(QString message, QString color)
+void Conversation::showClientMessage(QString nickname, QString message, QString color)
 {
     conversationWindow.show();
+    conversationWindow.raise();
+    conversationWindow.activateWindow();
     conversationWindow.showClientMessage(nickname, message, color);
 }
 
-void Client::showMessageReply(bool successful)
+void Conversation::signalMessageReply(bool successful)
 {
     if (successful) {
         conversationWindow.showClientMessage("You", messageQueue.dequeue());
@@ -53,14 +60,14 @@ void Client::showMessageReply(bool successful)
     }
 }
 
-void Client::forwardSaveHtmlConversation(QString conversation)
+void Conversation::forwardSaveHtmlConversation(QString conversation)
 {
-    emit saveHtmlConversation(id, conversation);
+    emit saveHtmlConversation(isClient, id, conversation);
 }
 
-void Client::forwardSendMessage(QString message)
+void Conversation::forwardSendMessage(QString message)
 {
     messageQueue.enqueue(message);
-    emit sendMessage(id, message);
+    emit sendMessage(isClient, id, message);
 }
 

@@ -1,8 +1,8 @@
 #include "newgroupwindow.h"
 #include "ui_newgroupwindow.h"
-#include "client.h"
+#include "conversation.h"
 
-NewGroupWindow::NewGroupWindow(QList<Client*> clients, QWidget *parent) :
+NewGroupWindow::NewGroupWindow(QList<Conversation*> clients, QWidget *parent) :
     QWidget(parent),
     ui(new Ui::NewGroupWindow)
 {
@@ -14,7 +14,7 @@ NewGroupWindow::NewGroupWindow(QList<Client*> clients, QWidget *parent) :
     ui->UsersScrollArea->setAlignment(Qt::AlignTop);
 
     for(int i = 0; i < clients.size(); ++i) {
-        button[i]= new QPushButton(clients[i]->getNickname());
+        button[i]= new QPushButton(clients[i]->getName());
         mapOfUsers.insert(clients[i]->getId(),button[i]);
         button[i]->setCheckable(true);
         ui->scrollAreaWidgetContents->layout()->addWidget(button[i]);

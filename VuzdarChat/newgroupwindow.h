@@ -4,7 +4,7 @@
 #include <QWidget>
 #include <QPushButton>
 #include <QMap>
-#include <client.h>
+#include <conversation.h>
 
 namespace Ui {
 class NewGroupWindow;
@@ -15,7 +15,7 @@ class NewGroupWindow : public QWidget
     Q_OBJECT
 
 public:
-    explicit NewGroupWindow(QList<Client *> clients, QWidget *parent = 0);
+    explicit NewGroupWindow(QList<Conversation *> clients, QWidget *parent = 0);
     ~NewGroupWindow();
 
 

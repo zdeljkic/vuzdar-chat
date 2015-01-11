@@ -17,10 +17,12 @@ public:
     bool connectToServer(QString hostname, quint16 port);
     void disconnectFromServer();
     void sendPacket(VuzdarPacket packet);
+    bool isConnected();
 
 public slots:
 
 private:
+    bool connected;
     QTcpSocket socket;
     QByteArray buffer;
 

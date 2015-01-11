@@ -1,7 +1,8 @@
 #include "connection.h"
 
 Connection::Connection(QObject *parent) :
-    QObject(parent)
+    QObject(parent),
+    connected(false)
 {
     connect(&socket, SIGNAL(readyRead()), this, SLOT(receiveData()));
 }
@@ -26,7 +27,7 @@ bool Connection::connectToServer(QString hostname, quint16 port)
     // tog statusa kaze jel nekonektiran (pocetno), konektiran, diskonektiran, greska se desila itd itd
     socket.connectToHost(hostname, port);
 
-    return socket.waitForConnected(1000);
+    return (connected = socket.waitForConnected(1000));
 }
 
 void Connection::disconnectFromServer()
@@ -36,7 +37,7 @@ void Connection::disconnectFromServer()
     socket.disconnectFromHost();
 
     if (socket.state() == QTcpSocket::UnconnectedState || socket.waitForDisconnected(1000))
-        return;
+        connected = false;
 }
 
 void Connection::sendPacket(VuzdarPacket packet)
@@ -47,6 +48,11 @@ void Connection::sendPacket(VuzdarPacket packet)
     qDebug() << "Sent packet";
     qDebug() << "Data:" << packet.getRawData().toHex();
     qDebug() << "-----";
+}
+
+bool Connection::isConnected()
+{
+    return connected;
 }
 
 void Connection::receiveData()

@@ -6,8 +6,7 @@
 #include <QMap>
 #include <QList>
 #include <QPair>
-#include <QCloseEvent>
-#include "client.h"
+#include "conversation.h"
 #include "connection.h"
 #include "newgroupwindow.h"
 #include "conversationwindow.h"
@@ -36,21 +35,23 @@ private slots:
     void on_newGroupButton_clicked();
 
     void processPacket(VuzdarPacket packet);
-    void saveHtmlConversation(quint16 id, QString conversation);
-    void sendMessage(quint16 id, QString message);
+    void saveHtmlConversation(bool isClient, quint16 id, QString conversation);
+    void sendMessage(bool isClient, quint16 id, QString message);
     void createNewGroup(QString name, QList<quint16> idList);
 
 private:
     Ui::Application *ui;
     Connection connection;
-    QMap<quint16, Client*> clients;
+    QMap<quint16, Conversation*> clients;
+    QMap<quint16, Conversation*> groups;
     State state;
     quint16 myId;
     QString myNickname;
 
     void changeState(State state);
-    QList<Client*> getClientList();
+    QList<Conversation*> getClientList();
     void addClientButton(QPushButton *button);
+    void addGroupButton(QPushButton *button);
 };
 
 #endif // APPLICATION_H
