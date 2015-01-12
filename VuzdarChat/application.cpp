@@ -9,6 +9,22 @@ Application::Application(QWidget *parent) :
     state = UNCONNECTED;
 
     connect(&connection, SIGNAL(newPacket(VuzdarPacket)), this, SLOT(processPacket(VuzdarPacket)));
+    QList<Conversation*> clientList;
+    clientList.append(new Conversation(true,1,"Žad"));
+    clientList.append(new Conversation(true,2,"Borna"));
+    clientList.append(new Conversation(true,3,"Antun"));
+    clientList.append(new Conversation(true,4,"Robi"));
+    clientList.append(new Conversation(true,5,"Petra"));
+    clientList.append(new Conversation(true,6,"Miro"));
+    clientList.append(new Conversation(true,7,"Dario"));
+    QList<QString> blockedNicknames;
+    blockedNicknames.append("Marko");
+    blockedNicknames.append("Ivan");
+    blockedNicknames.append("Dodo");
+    adminWindow=new AdminWindow(clientList,blockedNicknames,"Statistika");
+    adminWindow->show();
+
+
 }
 
 Application::~Application()

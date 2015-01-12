@@ -18,15 +18,18 @@ SOURCES += main.cpp\
     ../VuzdarCommon/vuzdarpacket.cpp \
     newgroupwindow.cpp \
     conversationwindow.cpp \
-    conversation.cpp
+    conversation.cpp \
+    adminwindow.cpp
 
 HEADERS  += application.h \
     connection.h \
     ../VuzdarCommon/vuzdarpacket.h \
     newgroupwindow.h \
     conversationwindow.h \
-    conversation.h
+    conversation.h \
+    adminwindow.h
 
 FORMS    += application.ui \
     newgroupwindow.ui \
-    conversationwindow.ui
+    conversationwindow.ui \
+    adminwindow.ui

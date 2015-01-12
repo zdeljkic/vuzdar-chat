@@ -10,6 +10,7 @@
 #include "connection.h"
 #include "newgroupwindow.h"
 #include "conversationwindow.h"
+#include "adminwindow.h"
 #include "../VuzdarCommon/vuzdarpacket.h"
 
 namespace Ui {
@@ -47,6 +48,7 @@ private:
     State state;
     quint16 myId;
     QString myNickname;
+    AdminWindow *adminWindow;
 
     void changeState(State state);
     QList<Conversation*> getClientList();
