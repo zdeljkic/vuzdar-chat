@@ -7,6 +7,7 @@
 #include <QList>
 #include <QPair>
 #include <QQueue>
+#include <QFile>
 #include "conversation.h"
 #include "connection.h"
 #include "newgroupwindow.h"

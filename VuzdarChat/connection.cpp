@@ -59,7 +59,6 @@ void Connection::receiveData()
 {
     // dodaj podatke bufferu i "nasjeckaj" u pakete
     buffer += socket.readAll();
-    qDebug() << "Buffer:" << buffer.toHex();
 
     VuzdarPacket packet = VuzdarPacket::chopBuffer(buffer);
 

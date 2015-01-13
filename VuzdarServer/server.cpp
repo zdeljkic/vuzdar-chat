@@ -368,7 +368,8 @@ void Server::processPacket(quint16 id, VuzdarPacket packet)
                                             VuzdarPacket::DISCONNECT, 0x10));
                 removeClient(kickId);
 
-                clients[id]->sendPacket(VuzdarPacket::generateControlCodePacket(
+                if (clients.contains(id))
+                    clients[id]->sendPacket(VuzdarPacket::generateControlCodePacket(
                                             VuzdarPacket::ADMIN, 0x10));
             }
         } else if (controlCode == 0x11) {
@@ -389,7 +390,8 @@ void Server::processPacket(quint16 id, VuzdarPacket packet)
                                             VuzdarPacket::DISCONNECT, 0x11));
                 removeClient(banId);
 
-                clients[id]->sendPacket(VuzdarPacket::generateControlCodePacket(
+                if (clients.contains(id))
+                    clients[id]->sendPacket(VuzdarPacket::generateControlCodePacket(
                                             VuzdarPacket::ADMIN, 0x11));
             }
 

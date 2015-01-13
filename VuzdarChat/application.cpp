@@ -10,22 +10,6 @@ Application::Application(QWidget *parent) :
     state = UNCONNECTED;
 
     connect(&connection, SIGNAL(newPacket(VuzdarPacket)), this, SLOT(processPacket(VuzdarPacket)));
-
-//    siki najjaci;
-//    QList<Conversation*> clientList;
-//    clientList.append(new Conversation(true,1,"Žad"));
-//    clientList.append(new Conversation(true,2,"Borna"));
-//    clientList.append(new Conversation(true,3,"Antun"));
-//    clientList.append(new Conversation(true,4,"Robi"));
-//    clientList.append(new Conversation(true,5,"Petra"));
-//    clientList.append(new Conversation(true,6,"Miro"));
-//    clientList.append(new Conversation(true,7,"Dario"));
-//    QList<QString> blockedNicknames;
-//    blockedNicknames.append("Marko");
-//    blockedNicknames.append("Ivan");
-//    blockedNicknames.append("Dodo");
-//    adminWindow=new AdminWindow(clientList,blockedNicknames,"Statistika");
-//    adminWindow->show();
 }
 
 Application::~Application()
@@ -261,6 +245,7 @@ void Application::processPacket(VuzdarPacket packet)
                     if (nickname == myNickname) {
                         // to je ovaj klijent u listi
                         myId = id;
+                        Conversation::setMyId(myId);
                     }
                 }
             }
@@ -292,7 +277,7 @@ void Application::processPacket(VuzdarPacket packet)
                 addText(QString("From (id): ").append(QString::number(id)));
                 addText(QString("Message: ").append(message));
             } else {
-                clients[id]->showClientMessage(clients[id]->getName(), message);
+                clients[id]->showClientMessage(clients[id]->getName(), message, Conversation::idToColor(id));
             }
         } else if (message.isEmpty()) {
             // potvrda
@@ -365,7 +350,7 @@ void Application::processPacket(VuzdarPacket packet)
                 return; // necu sam sebi jos jednom prikazat poruku
 
             groups[groupId]->showClientMessage(
-                        clients[senderId]->getName(), message);
+                        clients[senderId]->getName(), message, Conversation::idToColor(senderId));
         } else if (controlCode == 0x02) {
             // poruka poslana
             groups[packet.getId()]->signalMessageReply(true);
@@ -466,6 +451,34 @@ void Application::saveHtmlConversation(bool isClient, quint16 id, QString conver
     qDebug() << "jel client:" << isClient;
     qDebug() << "id:" << id;
     qDebug() << "html:" << conversation;
+
+    QString name = isClient ? clients[id]->getName() : groups[id]->getName();
+    name.append(".html");
+
+    QFile file(name);
+
+    if (!file.open(QIODevice::WriteOnly)) {
+        addText(QString("Unable to open file ").append(name));
+        return;
+    }
+
+    conversation.replace(QString("<!DOCTYPE HTML PUBLIC \"-//W3C//DTD HTML 4.0//EN\" \"http://www.w3.org/TR/REC-html40/strict.dtd\">"),
+                         QString("<!DOCTYPE html>"));
+
+    conversation.replace(QString("<head>"),
+                         QString("<head><meta charset=\"utf-8\">"));
+
+    conversation.replace(QString("10pt"),
+                         QString("12pt"));
+
+    QByteArray data = conversation.toUtf8();
+
+    if (file.write(data) == data.size())
+        addText(QString(name).append(" successfully saved."));
+    else
+        addText(QString(name).append(" unsuccessfully saved."));
+
+    file.close();
 }
 
 void Application::sendMessage(bool isClient, quint16 id, QString message)

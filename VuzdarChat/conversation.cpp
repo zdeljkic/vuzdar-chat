@@ -1,5 +1,8 @@
 #include "conversation.h"
 
+QList<QString> Conversation::colors;
+quint16 Conversation::myId = 0;
+
 Conversation::Conversation(bool isClient, quint16 id, QString name):
     button(name),
     conversationWindow(QString(name).append(" - VuzdarChat")),
@@ -9,6 +12,20 @@ Conversation::Conversation(bool isClient, quint16 id, QString name):
 
     connect(&conversationWindow, SIGNAL(saveHtmlConversation(QString)), this, SLOT(forwardSaveHtmlConversation(QString)));
     connect(&conversationWindow, SIGNAL(sendMessage(QString)), this, SLOT(forwardSendMessage(QString)));
+
+    if (colors.isEmpty()) {
+        colors.append("aqua");
+        colors.append("fuchsia");
+        colors.append("orange");
+        colors.append("maroon");
+        colors.append("navy");
+        colors.append("olive");
+        colors.append("blue");
+        colors.append("purple");
+        colors.append("red");
+        colors.append("teal");
+        colors.append("green");
+    }
 }
 
 Conversation::~Conversation() {
@@ -54,10 +71,20 @@ void Conversation::showClientMessage(QString nickname, QString message, QString 
 void Conversation::signalMessageReply(bool successful)
 {
     if (successful) {
-        conversationWindow.showClientMessage("You", messageQueue.dequeue());
+        conversationWindow.showClientMessage("You", messageQueue.dequeue(), idToColor(myId));
     } else {
         messageQueue.dequeue();
     }
+}
+
+QString Conversation::idToColor(quint16 id)
+{
+    return colors[id % colors.size()];
+}
+
+void Conversation::setMyId(quint16 id)
+{
+    myId = id;
 }
 
 void Conversation::forwardSaveHtmlConversation(QString conversation)

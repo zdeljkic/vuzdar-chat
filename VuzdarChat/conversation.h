@@ -25,6 +25,9 @@ public:
     void showClientMessage(QString nickname, QString message, QString color = QString("black"));
     void signalMessageReply(bool successful);
 
+    static QString idToColor(quint16 id);
+    static void setMyId(quint16 id);
+
 private:
     bool isClient;
     quint16 id;
@@ -32,6 +35,8 @@ private:
     QPushButton button;
     ConversationWindow conversationWindow;
     QQueue<QString> messageQueue;
+    static QList<QString> colors;
+    static quint16 myId;
 
 private slots:
     void forwardSaveHtmlConversation(QString conversation);

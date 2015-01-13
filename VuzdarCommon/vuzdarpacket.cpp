@@ -191,10 +191,7 @@ VuzdarPacket VuzdarPacket::chopBuffer(QByteArray &buffer)
         return generateControlCodePacket(MALFORMED_PACKET, 0x00);
     }
 
-    qDebug() << "test" << (quint16) buffer[2] << (quint8) buffer[2];
-    qDebug() << "convert" << convert(buffer[1], buffer[2]);
     quint16 size = convert(buffer[1], buffer[2]) + 3;
-    qDebug() << size;
 
     if (buffer.size() < size) {
         // procito velicinu, u bufferu nema dovoljno podataka
@@ -451,7 +448,7 @@ bool VuzdarPacket::checkName(QString name)
 bool VuzdarPacket::checkMessage(QString message)
 {
     for (int i = 0; i < message.size(); ++i) {
-        if (message[i].category() == QChar::Other_Control ||
+        if (message[i] != QChar('\n') && message[i].category() == QChar::Other_Control ||
                 message[i].category() == QChar::Other_Format ||
                 message[i].category() == QChar::Other_Surrogate ||
                 message[i].category() == QChar::Other_PrivateUse ||

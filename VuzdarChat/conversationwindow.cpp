@@ -18,12 +18,12 @@ ConversationWindow::~ConversationWindow()
 
 void ConversationWindow::showSystemMessage(QString message, QString color)
 {
-    ui->conversationText->insertHtml(QString("<font color=" + color + ">" + message + "</font><br>"));
+    ui->conversationText->append(QString("<font color=" + color + ">" + message.toHtmlEscaped() + "</font>"));
 }
 
 void ConversationWindow::showClientMessage(QString name, QString message, QString color)
 {
-    ui->conversationText->insertHtml(QString("<font color=" + color + ">" + name + ": " + "</font>" + message + "<br>"));
+    ui->conversationText->append(QString("<font color=" + color + ">" + name + ": " + "</font>" + message.toHtmlEscaped()));
 }
 
 void ConversationWindow::on_saveConversationButton_clicked()
