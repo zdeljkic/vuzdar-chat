@@ -1,12 +1,9 @@
 #include "client.h"
 #include "server.h"
 
-Client::Client(quint16 id, QTcpSocket *socket, Server *server)
+Client::Client(quint16 id, QTcpSocket *socket, Server *server) :
+    id(id), socket(socket), server(server), admin(false)
 {
-    this->id = id;
-    this->socket = socket;
-    this->server = server;
-
     connect(this->socket, SIGNAL(readyRead()), this, SLOT(receiveData()));
     connect(this->socket, SIGNAL(disconnected()), this, SLOT(disconnecting()));
 }
@@ -42,6 +39,16 @@ bool Client::isAlive()
 void Client::setAlive(bool alive)
 {
     this->alive = alive;
+}
+
+bool Client::isAdmin()
+{
+    return admin;
+}
+
+void Client::setAdmin(bool admin)
+{
+    this->admin = admin;
 }
 
 void Client::sendPacket(VuzdarPacket packet)

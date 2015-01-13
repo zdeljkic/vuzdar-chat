@@ -3,28 +3,29 @@
 
 Application::Application(QWidget *parent) :
     QWidget(parent),
-    ui(new Ui::Application)
+    ui(new Ui::Application),
+    adminWindow(0)
 {
     ui->setupUi(this);
     state = UNCONNECTED;
 
     connect(&connection, SIGNAL(newPacket(VuzdarPacket)), this, SLOT(processPacket(VuzdarPacket)));
-    QList<Conversation*> clientList;
-    clientList.append(new Conversation(true,1,"Žad"));
-    clientList.append(new Conversation(true,2,"Borna"));
-    clientList.append(new Conversation(true,3,"Antun"));
-    clientList.append(new Conversation(true,4,"Robi"));
-    clientList.append(new Conversation(true,5,"Petra"));
-    clientList.append(new Conversation(true,6,"Miro"));
-    clientList.append(new Conversation(true,7,"Dario"));
-    QList<QString> blockedNicknames;
-    blockedNicknames.append("Marko");
-    blockedNicknames.append("Ivan");
-    blockedNicknames.append("Dodo");
-    adminWindow=new AdminWindow(clientList,blockedNicknames,"Statistika");
-    adminWindow->show();
 
-
+//    siki najjaci;
+//    QList<Conversation*> clientList;
+//    clientList.append(new Conversation(true,1,"Žad"));
+//    clientList.append(new Conversation(true,2,"Borna"));
+//    clientList.append(new Conversation(true,3,"Antun"));
+//    clientList.append(new Conversation(true,4,"Robi"));
+//    clientList.append(new Conversation(true,5,"Petra"));
+//    clientList.append(new Conversation(true,6,"Miro"));
+//    clientList.append(new Conversation(true,7,"Dario"));
+//    QList<QString> blockedNicknames;
+//    blockedNicknames.append("Marko");
+//    blockedNicknames.append("Ivan");
+//    blockedNicknames.append("Dodo");
+//    adminWindow=new AdminWindow(clientList,blockedNicknames,"Statistika");
+//    adminWindow->show();
 }
 
 Application::~Application()
@@ -132,7 +133,7 @@ void Application::changeState(Application::State state)
         ui->authButton->setEnabled(true);
         ui->deauthButton->setEnabled(false);
         ui->openAdminButton->setEnabled(false);
-    } else if (state == CONNECTED_UNAUTHENTICATED) {
+    } else if (state == CONNECTED_AUTHENTICATED) {
         ui->hostnameText->setEnabled(false);
         ui->portText->setEnabled(false);
         ui->nicknameText->setEnabled(false);
@@ -381,6 +382,54 @@ void Application::processPacket(VuzdarPacket packet)
             groups[packet.getId()]->showSystemMessage(
                         QString(" joined the group.").prepend(clients[packet.getSecondId()]->getName()));
         }
+    } else if (type == VuzdarPacket::ADMIN) {
+        if (controlCode == 0x00) {
+            addText("--== Authentication successful ==--");
+            changeState(CONNECTED_AUTHENTICATED);
+        } else if (controlCode == 0xF0) {
+            addText("--== Deauthenticated - wrong password ==--");
+        } else if (controlCode == 0x01) {
+            addText("--== Deauthentication successful ==--");
+            changeState(CONNECTED_UNAUTHENTICATED);
+        } else if (controlCode == 0x20) {
+            bannedNicknameList = packet.getBannedNicknameList();
+            addText("--== Banned nicknames recieved ==--");
+            addText("--== Opening admin window (2/2) - requesting statistics from server... ==--");
+
+            connection.sendPacket(VuzdarPacket::generateControlCodePacket(
+                                      VuzdarPacket::ADMIN, 0x21));
+        } else if (controlCode == 0x21) {
+            QString stat = packet.getAdminString();
+            addText("--== Statistics recieved, opening admin window... ==--");
+
+            if (adminWindow)
+                adminWindow->deleteLater();
+            adminWindow = new AdminWindow(getClientList(), bannedNicknameList, stat);
+            connect(adminWindow, SIGNAL(clientLogout(QString)), this, SLOT(kickNickname(QString)));
+            connect(adminWindow, SIGNAL(clientBlocked(QString)), this, SLOT(banNickname(QString)));
+            connect(adminWindow, SIGNAL(nicknameUnblocked(QString)), this, SLOT(unbanNickname(QString)));
+            adminWindow->show();
+            adminWindow->raise();
+            adminWindow->activateWindow();
+        } else if (controlCode == 0x10) {
+            // uspjesan kick
+            if (kickQueue.isEmpty())
+                return;
+            QString nickname = kickQueue.dequeue();
+            adminWindow->removeClient(nickname);
+        } else if (controlCode == 0x11) {
+            // uspjesan ban
+            if (banQueue.isEmpty())
+                return;
+            QString nickname = banQueue.dequeue();
+            adminWindow->addToBlockedClients(nickname);
+        } else if (controlCode == 0x12) {
+            // uspjesan unban
+            if (unbanQueue.isEmpty())
+                return;
+            QString nickname = unbanQueue.dequeue();
+            adminWindow->removeBlockedNickname(nickname);
+        }
     } else if (type == VuzdarPacket::PING) {
         connection.sendPacket(VuzdarPacket::generateControlCodePacket(
                                   VuzdarPacket::PING, 0x00));
@@ -434,4 +483,47 @@ void Application::createNewGroup(QString name, QList<quint16> idList)
 
     connection.sendPacket(VuzdarPacket::generateNewGroupPacket(
                               0, name, idList));
+}
+
+void Application::kickNickname(QString nickname)
+{
+    connection.sendPacket(VuzdarPacket::generateAdminPacket(
+                              0x10, nickname));
+    kickQueue.enqueue(nickname);
+}
+
+void Application::banNickname(QString nickname)
+{
+    connection.sendPacket(VuzdarPacket::generateAdminPacket(
+                              0x11, nickname));
+    banQueue.enqueue(nickname);
+}
+
+void Application::unbanNickname(QString nickname)
+{
+    connection.sendPacket(VuzdarPacket::generateAdminPacket(
+                              0x12, nickname));
+    unbanQueue.enqueue(nickname);
+}
+
+void Application::on_authButton_clicked()
+{
+    addText("--== Authenticating... ==--");
+    connection.sendPacket(VuzdarPacket::generateAdminPacket(
+                              0x00, ui->passwordText->text()));
+    ui->passwordText->setText("");
+}
+
+void Application::on_deauthButton_clicked()
+{
+    addText("--== Deauthenticating... ==--");
+    connection.sendPacket(VuzdarPacket::generateAdminPacket(
+                              0x01, ui->passwordText->text()));
+}
+
+void Application::on_openAdminButton_clicked()
+{
+    addText("--== Opening admin window (1/2) - requesting banned nicknames from server... ==--");
+    connection.sendPacket(VuzdarPacket::generateControlCodePacket(
+                              VuzdarPacket::ADMIN, 0x20));
 }

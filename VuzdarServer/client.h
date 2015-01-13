@@ -22,6 +22,8 @@ public:
     QString getNickname();
     bool isAlive();
     void setAlive(bool alive);
+    bool isAdmin();
+    void setAdmin(bool admin);
 
     void sendPacket(VuzdarPacket packet);
 
@@ -33,6 +35,7 @@ private:
     QTcpSocket *socket;
     Server *server;
     bool alive;
+    bool admin;
     QByteArray buffer;
 
 private slots:

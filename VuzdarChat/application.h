@@ -6,6 +6,7 @@
 #include <QMap>
 #include <QList>
 #include <QPair>
+#include <QQueue>
 #include "conversation.h"
 #include "connection.h"
 #include "newgroupwindow.h"
@@ -34,11 +35,17 @@ private slots:
     void on_connectButton_clicked();
     void on_disconnectButton_clicked();
     void on_newGroupButton_clicked();
+    void on_authButton_clicked();
+    void on_deauthButton_clicked();
+    void on_openAdminButton_clicked();
 
     void processPacket(VuzdarPacket packet);
     void saveHtmlConversation(bool isClient, quint16 id, QString conversation);
     void sendMessage(bool isClient, quint16 id, QString message);
     void createNewGroup(QString name, QList<quint16> idList);
+    void kickNickname(QString nickname);
+    void banNickname(QString nickname);
+    void unbanNickname(QString nickname);
 
 private:
     Ui::Application *ui;
@@ -49,6 +56,10 @@ private:
     quint16 myId;
     QString myNickname;
     AdminWindow *adminWindow;
+    QList<QString> bannedNicknameList;
+    QQueue<QString> kickQueue;
+    QQueue<QString> banQueue;
+    QQueue<QString> unbanQueue;
 
     void changeState(State state);
     QList<Conversation*> getClientList();

@@ -168,7 +168,7 @@ F6 - klijent je vec u grupi
 Autorizacija, deautorizacija, kick/ban/unban po nadimku, trazi listu bannanih nadimaka, trazi statistiku
 
 1.1 Autorizacija, klijent ¨alje serveru:
-<1B control code 0x00><hash u hex obliku (gore definirano, trenutno veliko 64 znaka = bytea)>
+<1B control code 0x00><password>
 
 Server odgovara:
 <1B control code>

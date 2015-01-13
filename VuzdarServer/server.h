@@ -46,6 +46,7 @@ private:
     quint16 getNextGroupId();
 
     bool isNicknameUnique(QString nickname);
+    quint16 getClientByNickname(QString nickname);
     QList<QPair<quint16, QString> > generateAliveClientList();
 
 private slots:

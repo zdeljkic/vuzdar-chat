@@ -23,11 +23,11 @@ AdminWindow::AdminWindow(QList<Conversation*> clientList,QList<QString> blockedN
          updateBlockedUsers(blockedNicknameList[i]);
     }
     connect(unblockSignalMapper, SIGNAL(mapped(QString)), this, SIGNAL(nicknameUnblocked(QString)));
-    connect(unblockSignalMapper, SIGNAL(mapped(QString)), this, SLOT(removeBlockedNickname(QString)));
+    //connect(unblockSignalMapper, SIGNAL(mapped(QString)), this, SLOT(removeBlockedNickname(QString)));
     connect(logoutSignalMapper, SIGNAL(mapped(QString)), this, SIGNAL(clientLogout(QString)));
     connect(blockSignalMapper, SIGNAL(mapped(QString)), this, SIGNAL(clientBlocked(QString)));
-    connect(logoutSignalMapper, SIGNAL(mapped(QString)), this, SLOT(removeClient(QString)));
-    connect(blockSignalMapper, SIGNAL(mapped(QString)), this, SLOT(addToBlockedClients(QString)));
+    //connect(logoutSignalMapper, SIGNAL(mapped(QString)), this, SLOT(removeClient(QString)));
+    //connect(blockSignalMapper, SIGNAL(mapped(QString)), this, SLOT(addToBlockedClients(QString)));
 }
 
 
@@ -92,7 +92,6 @@ void AdminWindow::addToBlockedClients(QString nickname)
 void AdminWindow::removeBlockedNickname(QString nickname)
 {
     QWidget* row=mapOfBlockedUsers[nickname];
-    updateOnlineUsers(nickname);
     row->deleteLater();
 }
 

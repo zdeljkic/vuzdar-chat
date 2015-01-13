@@ -6,6 +6,7 @@
 #include <QChar>
 #include <QList>
 #include <QPair>
+#include <QDebug>
 
 class VuzdarPacket
 {

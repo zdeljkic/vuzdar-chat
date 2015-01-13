@@ -98,7 +98,7 @@ void Server::stopServer()
     file.close();
 
     emit newInfoText("Configuration file saved.");
-    emit newInfoText(adminInfo.getStatisticsString()); // !!DEBUG!!
+    emit newInfoText(adminInfo.getStatisticsString());
 }
 
 void Server::processPacket(quint16 id, VuzdarPacket packet)
@@ -323,7 +323,115 @@ void Server::processPacket(quint16 id, VuzdarPacket packet)
             // nepoznati control code, saljem ERROR: ne prepoznajem paket
             clients[id]->sendPacket(VuzdarPacket::generateControlCodePacket(VuzdarPacket::ERROR, 0x02));
         }
-    } else if(type == VuzdarPacket::PING) {
+    } else if (type == VuzdarPacket::ADMIN) {
+        quint8 controlCode = packet.getControlCode();
+
+        if (controlCode == 0x00) {
+            // trazi autorizaciju
+            QString pass = packet.getAdminString();
+
+            if (adminInfo.validatePassword(pass)) {
+                // dobar pass
+                clients[id]->setAdmin(true);
+                clients[id]->sendPacket(VuzdarPacket::generateControlCodePacket(
+                                            VuzdarPacket::ADMIN, 0x00));
+            } else {
+                // nije
+                clients[id]->setAdmin(false);
+                clients[id]->sendPacket(VuzdarPacket::generateControlCodePacket(
+                                            VuzdarPacket::ADMIN, 0xF0));
+            }
+        } else if (controlCode == 0x01) {
+            // trazi deautorizaciju
+            clients[id]->setAdmin(false);
+            clients[id]->sendPacket(VuzdarPacket::generateControlCodePacket(
+                                        VuzdarPacket::ADMIN, 0x01));
+        } else if (controlCode == 0x10) {
+            // provjeri jel admin
+            if (clients[id]->isAdmin() == false) {
+                clients[id]->sendPacket(VuzdarPacket::generateControlCodePacket(
+                                            VuzdarPacket::ADMIN, 0xF0));
+                return;
+            }
+
+            // kick nadimak
+            QString nickname = packet.getAdminString();
+
+            quint16 kickId = getClientByNickname(nickname);
+            if (kickId == 0) {
+                // nema klijenta sa tim nick-om
+                clients[id]->sendPacket(VuzdarPacket::generateControlCodePacket(
+                                            VuzdarPacket::ADMIN, 0xF1));
+            } else {
+                // kickaj
+                clients[kickId]->sendPacket(VuzdarPacket::generateControlCodePacket(
+                                            VuzdarPacket::DISCONNECT, 0x10));
+                removeClient(kickId);
+
+                clients[id]->sendPacket(VuzdarPacket::generateControlCodePacket(
+                                            VuzdarPacket::ADMIN, 0x10));
+            }
+        } else if (controlCode == 0x11) {
+            // provjeri jel admin
+            if (clients[id]->isAdmin() == false) {
+                clients[id]->sendPacket(VuzdarPacket::generateControlCodePacket(
+                                            VuzdarPacket::ADMIN, 0xF0));
+                return;
+            }
+
+            // ban nadimak
+            QString nickname = packet.getAdminString();
+
+            quint16 banId = getClientByNickname(nickname);
+            if (banId != 0) {
+                // postoji takav klijent online, kickaj
+                clients[banId]->sendPacket(VuzdarPacket::generateControlCodePacket(
+                                            VuzdarPacket::DISCONNECT, 0x11));
+                removeClient(banId);
+
+                clients[id]->sendPacket(VuzdarPacket::generateControlCodePacket(
+                                            VuzdarPacket::ADMIN, 0x11));
+            }
+
+            adminInfo.addBannedNickname(nickname);
+        } else if (controlCode == 0x12) {
+            // provjeri jel admin
+            if (clients[id]->isAdmin() == false) {
+                clients[id]->sendPacket(VuzdarPacket::generateControlCodePacket(
+                                            VuzdarPacket::ADMIN, 0xF0));
+                return;
+            }
+
+            adminInfo.removeBannedNickname(packet.getAdminString());
+            clients[id]->sendPacket(VuzdarPacket::generateControlCodePacket(
+                                        VuzdarPacket::ADMIN, 0x12));
+        } else if (controlCode == 0x20) {
+            // provjeri jel admin
+            if (clients[id]->isAdmin() == false) {
+                clients[id]->sendPacket(VuzdarPacket::generateControlCodePacket(
+                                            VuzdarPacket::ADMIN, 0xF0));
+                return;
+            }
+
+            QList<QString> list = adminInfo.getBannedNicknames();
+            qDebug() << list;
+            clients[id]->sendPacket(VuzdarPacket::generateBannedListPacket(list));
+        } else if (controlCode == 0x21) {
+            // provjeri jel admin
+            if (clients[id]->isAdmin() == false) {
+                clients[id]->sendPacket(VuzdarPacket::generateControlCodePacket(
+                                            VuzdarPacket::ADMIN, 0xF0));
+                return;
+            }
+
+            qDebug() << adminInfo.getStatisticsString();
+            clients[id]->sendPacket(VuzdarPacket::generateAdminPacket(
+                                        0x21, adminInfo.getStatisticsString()));
+        } else {
+            // nepoznati control code, saljem ERROR: ne prepoznajem paket
+            clients[id]->sendPacket(VuzdarPacket::generateControlCodePacket(VuzdarPacket::ERROR, 0x02));
+        }
+    } else if (type == VuzdarPacket::PING) {
         // sta god je ovdje (bilokoji controlCode) interpretiram ko dobar ping reply
         clients[id]->setAlive(true);
     } else if (type == VuzdarPacket::DISCONNECT) {
@@ -366,6 +474,18 @@ bool Server::isNicknameUnique(QString nickname)
     }
 
     return true;
+}
+
+quint16 Server::getClientByNickname(QString nickname)
+{
+    QMap<quint16, Client*>::const_iterator i;
+
+    for (i = clients.constBegin(); i != clients.constEnd(); ++i) {
+        if (nickname == i.value()->getNickname())
+            return i.key();
+    }
+
+    return 0;
 }
 
 QList<QPair<quint16, QString> > Server::generateAliveClientList()

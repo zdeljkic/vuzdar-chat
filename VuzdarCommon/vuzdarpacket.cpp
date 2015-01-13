@@ -191,7 +191,10 @@ VuzdarPacket VuzdarPacket::chopBuffer(QByteArray &buffer)
         return generateControlCodePacket(MALFORMED_PACKET, 0x00);
     }
 
+    qDebug() << "test" << (quint16) buffer[2] << (quint8) buffer[2];
+    qDebug() << "convert" << convert(buffer[1], buffer[2]);
     quint16 size = convert(buffer[1], buffer[2]) + 3;
+    qDebug() << size;
 
     if (buffer.size() < size) {
         // procito velicinu, u bufferu nema dovoljno podataka
@@ -422,7 +425,7 @@ VuzdarPacket VuzdarPacket::generateNewGroupPacket(quint16 id, QString name, QLis
 
 quint16 VuzdarPacket::convert(char first, char second)
 {
-    return 256 * (quint16) first + (quint16) second;
+    return 256 * (quint8) first + (quint8) second;
 }
 
 QPair<quint8, quint8> VuzdarPacket::convert(quint16 x)

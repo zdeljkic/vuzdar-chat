@@ -168,6 +168,9 @@
         <property name="enabled">
          <bool>false</bool>
         </property>
+        <property name="echoMode">
+         <enum>QLineEdit::PasswordEchoOnEdit</enum>
+        </property>
        </widget>
       </item>
       <item>
@@ -216,6 +219,9 @@
        <width>16777215</width>
        <height>100</height>
       </size>
+     </property>
+     <property name="readOnly">
+      <bool>true</bool>
      </property>
     </widget>
    </item>
