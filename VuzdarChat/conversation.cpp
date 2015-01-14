@@ -55,16 +55,16 @@ QPushButton *Conversation::getButton()
 void Conversation::showSystemMessage(QString message, QString color)
 {
     conversationWindow.show();
-    conversationWindow.raise();
-    conversationWindow.activateWindow();
+    //conversationWindow.raise();
+    //conversationWindow.activateWindow();
     conversationWindow.showSystemMessage(message, color);
 }
 
 void Conversation::showClientMessage(QString nickname, QString message, QString color)
 {
     conversationWindow.show();
-    conversationWindow.raise();
-    conversationWindow.activateWindow();
+    //conversationWindow.raise();
+    //conversationWindow.activateWindow();
     conversationWindow.showClientMessage(nickname, message, color);
 }
 
@@ -94,6 +94,16 @@ void Conversation::forwardSaveHtmlConversation(QString conversation)
 
 void Conversation::forwardSendMessage(QString message)
 {
+    // !!TMP!!
+    if (!isClient && message == QString("!leave")) {
+        emit leaveGroup(id);
+        return;
+    } else if (!isClient && message.left(5) == QString("!add ")) {
+        QString nickname = message.mid(5);
+        emit addToGroup(id, nickname);
+        return;
+    }
+
     messageQueue.enqueue(message);
     emit sendMessage(isClient, id, message);
 }

@@ -320,6 +320,8 @@ void Application::processPacket(VuzdarPacket packet)
 
             connect(c, SIGNAL(sendMessage(bool,quint16,QString)), this, SLOT(sendMessage(bool,quint16,QString)));
             connect(c, SIGNAL(saveHtmlConversation(bool,quint16,QString)), this, SLOT(saveHtmlConversation(bool,quint16,QString)));
+            connect(c, SIGNAL(addToGroup(quint16,QString)), this, SLOT(addToGroup(quint16,QString)));
+            connect(c, SIGNAL(leaveGroup(quint16)), this, SLOT(leaveGroup(quint16)));
 
             addGroupButton(c->getButton());
 
@@ -362,10 +364,13 @@ void Application::processPacket(VuzdarPacket packet)
             groups[packet.getId()]->showSystemMessage("Unable to send message, unallowed characters in message.");
         } else if (controlCode == 0x11) {
             groups[packet.getId()]->showSystemMessage(
-                        QString(" left the group.").prepend(clients[packet.getSecondId()]->getName()));
+                    QString(" left the group.").prepend(clients[packet.getSecondId()]->getName()));
         } else if (controlCode == 0x12) {
             groups[packet.getId()]->showSystemMessage(
                         QString(" joined the group.").prepend(clients[packet.getSecondId()]->getName()));
+        } else if (controlCode == 0x03) {
+            groups[packet.getId()]->deleteLater();
+            groups.remove(packet.getId());
         }
     } else if (type == VuzdarPacket::ADMIN) {
         if (controlCode == 0x00) {
@@ -488,6 +493,30 @@ void Application::sendMessage(bool isClient, quint16 id, QString message)
                               0x00, id, message));
     else connection.sendPacket(VuzdarPacket::generateTextGroupMessagePacket(
                                    0x00, id, myId, message));
+}
+
+void Application::addToGroup(quint16 groupId, QString nickname)
+{
+    quint16 clientId = 0;
+
+    QMap<quint16, Conversation*>::const_iterator i;
+
+    for (i = clients.constBegin(); i != clients.constEnd(); ++i) {
+        if (i.value()->getName() == nickname) {
+            clientId = i.value()->getId();
+            break;
+        }
+    }
+
+    if (clientId)
+        connection.sendPacket(VuzdarPacket::generateGroupMemberChangePacket(
+                              0x12, groupId, clientId));
+}
+
+void Application::leaveGroup(quint16 groupId)
+{
+    connection.sendPacket(VuzdarPacket::generateControlCodeIdPacket(
+                              VuzdarPacket::TEXT_GROUP_MESSAGE, 0x11, groupId));
 }
 
 void Application::createNewGroup(QString name, QList<quint16> idList)

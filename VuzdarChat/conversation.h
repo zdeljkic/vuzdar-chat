@@ -45,6 +45,8 @@ private slots:
 signals:
     void saveHtmlConversation(bool isClient, quint16 id, QString conversation);
     void sendMessage(bool isClient, quint16 id, QString message);
+    void leaveGroup(quint16 id);
+    void addToGroup(quint16 id, QString nickname);
 };
 
 #endif // CLIENT_H

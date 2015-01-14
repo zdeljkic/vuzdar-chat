@@ -544,6 +544,28 @@ void Server::removeClient(quint16 id, bool timeout)
         return;
     }
 
+    // izbaci ga iz svih grupa osim nulte
+    QMap <quint16, Group*>::const_iterator i;
+    QList<quint16> deleteGroups;
+
+    for (i = groups.constBegin(); i != groups.constEnd(); ++i) {
+        if (i.key() == 0)
+            continue;
+
+        i.value()->removeMember(clients[id]);
+        i.value()->sendPacket(VuzdarPacket::generateGroupMemberChangePacket(0x11, i.key(), id));
+
+        if (i.value()->getClientList().size() == 0) {
+            deleteGroups.append(i.key());
+        }
+    }
+
+    // pobrisi sve mrtve grupe (nemoze se gore dok iteriramo po njima)
+    for (int i = 0; i < deleteGroups.size(); ++i) {
+        delete groups[deleteGroups[i]];
+        groups.remove(deleteGroups[i]);
+    }
+
     groups[0]->removeMember(clients[id]);
     clients[id]->deleteLater();
     clients.remove(id);

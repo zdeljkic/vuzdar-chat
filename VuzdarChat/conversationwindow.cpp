@@ -9,6 +9,7 @@ ConversationWindow::ConversationWindow(QString title, QWidget *parent) :
     setAttribute(Qt::WA_QuitOnClose, false);
 
     setWindowTitle(title);
+    ui->messageText->installEventFilter(this);
 }
 
 ConversationWindow::~ConversationWindow()
@@ -16,14 +17,36 @@ ConversationWindow::~ConversationWindow()
     delete ui;
 }
 
+bool ConversationWindow::eventFilter(QObject *o, QEvent *e)
+{
+    if (o == ui->messageText && e->type() == QEvent::KeyPress) {
+        QKeyEvent *ke = (QKeyEvent *) e;
+
+        if (ke->key() == Qt::Key_Return && ke->modifiers() != Qt::ShiftModifier) {
+            on_sendButton_clicked();
+            return true;
+        } else {
+            return QWidget::eventFilter(o, e);
+        }
+    } else {
+        return QWidget::eventFilter(o, e);
+    }
+}
+
 void ConversationWindow::showSystemMessage(QString message, QString color)
 {
-    ui->conversationText->append(QString("<font color=" + color + ">" + message.toHtmlEscaped() + "</font>"));
+    message = message.toHtmlEscaped();
+    message.replace(QString("\n"), QString("<br>"));
+    message.replace(QString(" "), QString("&nbsp;"));
+    ui->conversationText->append(QString("<font color=" + color + ">" + message + "</font>"));
 }
 
 void ConversationWindow::showClientMessage(QString name, QString message, QString color)
 {
-    ui->conversationText->append(QString("<font color=" + color + ">" + name + ": " + "</font>" + message.toHtmlEscaped()));
+    message = message.toHtmlEscaped();
+    message.replace(QString("\n"), QString("<br>"));
+    message.replace(QString(" "), QString("&nbsp;"));
+    ui->conversationText->append(QString("<font color=" + color + ">" + name + ": " + "</font>" + message));
 }
 
 void ConversationWindow::on_saveConversationButton_clicked()

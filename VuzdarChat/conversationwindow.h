@@ -2,6 +2,9 @@
 #define CONVERSATIONWINDOW_H
 
 #include <QWidget>
+#include <QEvent>
+#include <QKeyEvent>
+#include <QDebug>
 
 namespace Ui {
 class ConversationWindow;
@@ -17,6 +20,9 @@ public:
 
 private:
     Ui::ConversationWindow *ui;
+
+protected:
+    virtual bool eventFilter(QObject *o, QEvent *e);
 
 signals:
     void saveHtmlConversation(QString conversation);

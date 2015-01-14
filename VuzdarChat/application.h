@@ -43,6 +43,8 @@ private slots:
     void processPacket(VuzdarPacket packet);
     void saveHtmlConversation(bool isClient, quint16 id, QString conversation);
     void sendMessage(bool isClient, quint16 id, QString message);
+    void addToGroup(quint16 groupId, QString nickname);
+    void leaveGroup(quint16 groupId);
     void createNewGroup(QString name, QList<quint16> idList);
     void kickNickname(QString nickname);
     void banNickname(QString nickname);

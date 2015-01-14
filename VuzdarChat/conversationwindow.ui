@@ -18,7 +18,8 @@
     <widget class="QTextEdit" name="conversationText">
      <property name="font">
       <font>
-       <pointsize>10</pointsize>
+       <family>Courier New</family>
+       <pointsize>11</pointsize>
       </font>
      </property>
      <property name="readOnly">
@@ -69,7 +70,8 @@
        </property>
        <property name="font">
         <font>
-         <pointsize>10</pointsize>
+         <family>Courier New</family>
+         <pointsize>9</pointsize>
         </font>
        </property>
       </widget>
