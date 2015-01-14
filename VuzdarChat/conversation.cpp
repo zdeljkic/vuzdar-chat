@@ -4,9 +4,9 @@ QList<QString> Conversation::colors;
 quint16 Conversation::myId = 0;
 
 Conversation::Conversation(bool isClient, quint16 id, QString name):
+    isClient(isClient), id(id), name(name),
     button(name),
-    conversationWindow(QString(name).append(" - VuzdarChat")),
-    isClient(isClient), id(id), name(name)
+    conversationWindow(QString(name).append(" - VuzdarChat"))
 {
     connect(&button, SIGNAL(clicked()), &conversationWindow, SLOT(show()));
 
@@ -32,7 +32,7 @@ Conversation::~Conversation() {
     conversationWindow.deleteLater();
 }
 
-quint16 Conversation::setId(quint16 id)
+void Conversation::setId(quint16 id)
 {
     this->id = id;
 }
@@ -54,7 +54,8 @@ QPushButton *Conversation::getButton()
 
 void Conversation::showSystemMessage(QString message, QString color)
 {
-    conversationWindow.show();
+    if (!conversationWindow.isVisible())
+        conversationWindow.show();
     //conversationWindow.raise();
     //conversationWindow.activateWindow();
     conversationWindow.showSystemMessage(message, color);
@@ -62,7 +63,8 @@ void Conversation::showSystemMessage(QString message, QString color)
 
 void Conversation::showClientMessage(QString nickname, QString message, QString color)
 {
-    conversationWindow.show();
+    if (!conversationWindow.isVisible())
+        conversationWindow.show();
     //conversationWindow.raise();
     //conversationWindow.activateWindow();
     conversationWindow.showClientMessage(nickname, message, color);
@@ -70,9 +72,9 @@ void Conversation::showClientMessage(QString nickname, QString message, QString 
 
 void Conversation::signalMessageReply(bool successful)
 {
-    if (successful) {
+    if (successful && !messageQueue.isEmpty()) {
         conversationWindow.showClientMessage("You", messageQueue.dequeue(), idToColor(myId));
-    } else {
+    } else if (!messageQueue.isEmpty()) {
         messageQueue.dequeue();
     }
 }

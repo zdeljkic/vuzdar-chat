@@ -31,6 +31,7 @@ private slots:
 
 signals:
     void newPacket(VuzdarPacket packet);
+    void disconnected();
 };
 
 #endif // CONNECTION_H

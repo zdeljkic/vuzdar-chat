@@ -5,6 +5,7 @@ Connection::Connection(QObject *parent) :
     connected(false)
 {
     connect(&socket, SIGNAL(readyRead()), this, SLOT(receiveData()));
+    connect(&socket, SIGNAL(disconnected()), this, SIGNAL(disconnected()));
 }
 
 QHostAddress Connection::getAddress()

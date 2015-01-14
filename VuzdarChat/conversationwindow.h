@@ -5,6 +5,7 @@
 #include <QEvent>
 #include <QKeyEvent>
 #include <QDebug>
+#include <QTime>
 
 namespace Ui {
 class ConversationWindow;
@@ -20,6 +21,8 @@ public:
 
 private:
     Ui::ConversationWindow *ui;
+
+    QString time();
 
 protected:
     virtual bool eventFilter(QObject *o, QEvent *e);

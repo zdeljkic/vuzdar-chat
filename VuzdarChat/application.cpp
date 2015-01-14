@@ -10,6 +10,10 @@ Application::Application(QWidget *parent) :
     state = UNCONNECTED;
 
     connect(&connection, SIGNAL(newPacket(VuzdarPacket)), this, SLOT(processPacket(VuzdarPacket)));
+    connect(&connection, SIGNAL(disconnected()), this, SLOT(on_disconnectButton_clicked()));
+
+    newMessage.setSource(QUrl::fromLocalFile("new_message.wav"));
+    newMessage.setVolume(1.0f);
 }
 
 Application::~Application()
@@ -75,6 +79,10 @@ void Application::on_disconnectButton_clicked()
     }
 
     groups.clear();
+
+    kickQueue.clear();
+    banQueue.clear();
+    unbanQueue.clear();
 
     addText("--== Disconnected from the server ==--");
     changeState(UNCONNECTED);
@@ -215,7 +223,7 @@ void Application::processPacket(VuzdarPacket packet)
         } else if (controlCode == 0xF3){
             addText("--== Registration unsuccessful, nickname banned ==--");
             on_disconnectButton_clicked();
-        } else if (controlCode >= 0xF4 && controlCode <= 0xFF) {
+        } else if (controlCode >= 0xF4) {
             addText("--== Registration unsuccessful, reason unknown ==--");
             on_disconnectButton_clicked();
         } else {
@@ -278,11 +286,13 @@ void Application::processPacket(VuzdarPacket packet)
                 addText(QString("Message: ").append(message));
             } else {
                 clients[id]->showClientMessage(clients[id]->getName(), message, Conversation::idToColor(id));
+                newMessage.play();
             }
         } else if (message.isEmpty()) {
             // potvrda
             if (controlCode == 0x00) {
                 clients[id]->signalMessageReply(true);
+                newMessage.play();
             } else {
                 clients[id]->signalMessageReply(false);
 
@@ -353,9 +363,11 @@ void Application::processPacket(VuzdarPacket packet)
 
             groups[groupId]->showClientMessage(
                         clients[senderId]->getName(), message, Conversation::idToColor(senderId));
+            newMessage.play();
         } else if (controlCode == 0x02) {
             // poruka poslana
             groups[packet.getId()]->signalMessageReply(true);
+            newMessage.play();
         } else if (controlCode == 0xF3) {
             groups[packet.getId()]->signalMessageReply(false);
             groups[packet.getId()]->showSystemMessage("Unable to send message, group doesn't exist.");

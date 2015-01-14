@@ -8,6 +8,7 @@
 #include <QPair>
 #include <QQueue>
 #include <QFile>
+#include <QSoundEffect>
 #include "conversation.h"
 #include "connection.h"
 #include "newgroupwindow.h"
@@ -63,6 +64,7 @@ private:
     QQueue<QString> kickQueue;
     QQueue<QString> banQueue;
     QQueue<QString> unbanQueue;
+    QSoundEffect newMessage;
 
     void changeState(State state);
     QList<Conversation*> getClientList();

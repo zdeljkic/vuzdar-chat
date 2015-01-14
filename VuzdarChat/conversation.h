@@ -16,7 +16,7 @@ public:
     Conversation(bool isClient, quint16 id, QString name);
     ~Conversation();
 
-    quint16 setId(quint16 id);
+    void setId(quint16 id);
     quint16 getId();
     QString getName();
     QPushButton *getButton();

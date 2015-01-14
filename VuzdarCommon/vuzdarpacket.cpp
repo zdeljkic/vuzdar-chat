@@ -448,11 +448,12 @@ bool VuzdarPacket::checkName(QString name)
 bool VuzdarPacket::checkMessage(QString message)
 {
     for (int i = 0; i < message.size(); ++i) {
-        if (message[i] != QChar('\n') && message[i].category() == QChar::Other_Control ||
+        if ((message[i] != QChar('\n')) &&
+                (message[i].category() == QChar::Other_Control ||
                 message[i].category() == QChar::Other_Format ||
                 message[i].category() == QChar::Other_Surrogate ||
                 message[i].category() == QChar::Other_PrivateUse ||
-                message[i].category() == QChar::Other_NotAssigned)
+                message[i].category() == QChar::Other_NotAssigned))
             return false;
     }
 
