@@ -50,3 +50,13 @@ QList<quint16> Group::getClientList()
     return list;
 }
 
+bool Group::isMember(quint16 id)
+{
+    for (int i = 0; i < clients.size(); ++i) {
+        if (clients[i]->getId() == id)
+            return true;
+    }
+
+    return false;
+}
+

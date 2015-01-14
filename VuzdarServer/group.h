@@ -16,6 +16,7 @@ public:
     quint16 getId();
     QString getName();
     QList<quint16> getClientList();
+    bool isMember(quint16 id);
 
 private:
     quint16 id;

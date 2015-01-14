@@ -549,14 +549,13 @@ void Server::removeClient(quint16 id, bool timeout)
     QList<quint16> deleteGroups;
 
     for (i = groups.constBegin(); i != groups.constEnd(); ++i) {
-        if (i.key() == 0)
-            continue;
+        if (i.key() != 0 && i.value()->isMember(id)) {
+            i.value()->removeMember(clients[id]);
+            i.value()->sendPacket(VuzdarPacket::generateGroupMemberChangePacket(0x11, i.key(), id));
 
-        i.value()->removeMember(clients[id]);
-        i.value()->sendPacket(VuzdarPacket::generateGroupMemberChangePacket(0x11, i.key(), id));
-
-        if (i.value()->getClientList().size() == 0) {
-            deleteGroups.append(i.key());
+            if (i.value()->getClientList().size() == 0) {
+                deleteGroups.append(i.key());
+            }
         }
     }
 

@@ -103,6 +103,7 @@ void Application::changeState(Application::State state)
         ui->authButton->setEnabled(false);
         ui->deauthButton->setEnabled(false);
         ui->openAdminButton->setEnabled(false);
+        ui->newGroupButton->setEnabled(false);
     } else if(state == REGISTERING) {
         ui->hostnameText->setEnabled(false);
         ui->portText->setEnabled(false);
@@ -114,6 +115,7 @@ void Application::changeState(Application::State state)
         ui->authButton->setEnabled(false);
         ui->deauthButton->setEnabled(false);
         ui->openAdminButton->setEnabled(false);
+        ui->newGroupButton->setEnabled(false);
     } else if (state == CONNECTED_UNAUTHENTICATED) {
         ui->hostnameText->setEnabled(false);
         ui->portText->setEnabled(false);
@@ -125,6 +127,7 @@ void Application::changeState(Application::State state)
         ui->authButton->setEnabled(true);
         ui->deauthButton->setEnabled(false);
         ui->openAdminButton->setEnabled(false);
+        ui->newGroupButton->setEnabled(true);
     } else if (state == CONNECTED_AUTHENTICATED) {
         ui->hostnameText->setEnabled(false);
         ui->portText->setEnabled(false);
@@ -136,6 +139,7 @@ void Application::changeState(Application::State state)
         ui->authButton->setEnabled(false);
         ui->deauthButton->setEnabled(true);
         ui->openAdminButton->setEnabled(true);
+        ui->newGroupButton->setEnabled(true);
     }
 }
 

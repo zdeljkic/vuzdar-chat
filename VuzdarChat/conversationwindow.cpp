@@ -66,6 +66,6 @@ void ConversationWindow::on_saveConversationButton_clicked()
 
 void ConversationWindow::on_sendButton_clicked()
 {
-    emit sendMessage(ui->messageText->toPlainText());
+    emit sendMessage(ui->messageText->toPlainText().left(10000));
     ui->messageText->setHtml("");
 }
